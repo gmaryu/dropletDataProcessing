@@ -2,14 +2,14 @@ function segmentationResult = segmentBrightFieldImage(brightFieldImage, segmenta
     % TODO: Add description
     arguments (Input)
         brightFieldImage (:,:) {mustBeNumeric}
-        segmentationParameters segmentationParametersClass
+        segmentationParameters segmentation.Parameters
     end
 
     arguments (Output)
-        segmentationResult segmentationResultClass
+        segmentationResult segmentation.Result
     end
     % Pre-process image to make it suitable for thresholding and segmentation
-    preProcessedImage = preProcessBrightFieldImage(brightFieldImage);
+    preProcessedImage = segmentation.preProcessBrightFieldImage(brightFieldImage, segmentationParameters);
     % Convert image into binary mask
     level = graythresh(preProcessedImage);
     binaryMask = imbinarize(preProcessedImage, level);
@@ -33,5 +33,5 @@ function segmentationResult = segmentBrightFieldImage(brightFieldImage, segmenta
     filteredLabeledImage(vertcat(regionProperties(filter).PixelIdxList)) = 0;
     filteredRegionProperties = regionProperties(~filter); 
     % Create segmentation result
-    segmentationResult = segmentationResultClass(filteredLabeledImage, filteredRegionProperties);
+    segmentationResult = segmentation.Result(filteredLabeledImage, filteredRegionProperties);
 end

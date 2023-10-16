@@ -1,4 +1,4 @@
-# droplet-data-processing
+# Droplet Data Processing Toolbox
 Tools for the tracking and analysis of microfluidic droplets
 
 ## License
