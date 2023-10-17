@@ -5,7 +5,6 @@ function processedImage = preProcessBrightFieldImage(brightFieldImage, segmentat
         segmentationParameters segmentation.Parameters
     end
 
-    % TODO: Implement pre-processing steps
     gaussFilteredImage = imgaussfilt(brightFieldImage, segmentationParameters.gaussianFilterSigma);
     processedImage = gaussFilteredImage;
 end
