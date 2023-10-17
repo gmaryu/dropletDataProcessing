@@ -16,22 +16,10 @@ function segmentationResult = segmentBrightFieldImage(brightFieldImage, segmenta
     distanceTransform = -bwdist(~binaryMask);
     distanceTransform(~binaryMask) = -Inf; % Set background pixels to -Inf so they become a catchment basin
     labeledImage = watershed(distanceTransform);
-    % Calculate the properties of each region (see https://www.mathworks.com/help/images/ref/regionprops.html)
-    regionProperties = regionprops(labeledImage, brightFieldImage, ...
-                                   'Centroid','Area', 'Circularity',...
-                                   'PixelIdxList','PixelValues', ...
-                                   'Eccentricity','EulerNumber');
     % Filter segmentation result
-    tooSmall = [regionProperties.Area] < segmentationParameters.minSegmentedArea;
-    tooLarge = [regionProperties.Area] > segmentationParameters.maxSegmentedArea;
-    notSymmetrical = [regionProperties.Eccentricity] > segmentationParameters.maxEccentricity;
-    notRound = [regionProperties.Circularity] < segmentationParameters.minCircularity;
-    tooManyHoles = [regionProperties.EulerNumber] < 1 - segmentationParameters.maxNumberOfHoles;
-    filter = tooSmall | tooLarge | notSymmetrical | notRound | tooManyHoles;
-    % Remove regions that do not pass the filter from the labeled image and region properties
-    filteredLabeledImage = labeledImage;
-    filteredLabeledImage(vertcat(regionProperties(filter).PixelIdxList)) = 0;
-    filteredRegionProperties = regionProperties(~filter); 
+    [filteredLabeledImage, filteredRegionProperties] = segmentation.filterRegions(brightFieldImage, ...
+                                                                                  labeledImage, ... 
+                                                                                  segmentationParameters);
     % Create segmentation result
     segmentationResult = segmentation.Result(filteredLabeledImage, filteredRegionProperties);
 end
