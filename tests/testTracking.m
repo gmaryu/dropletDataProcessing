@@ -17,14 +17,13 @@ function setupOnce(testCase)
     testCase.TestData.segmentationResult1 = segmentationResult1;
 end
 
-function testLinkSegmentationResults(testCase)
+function testLinkSegmentedObjects(testCase)
     segmentationResult0 = testCase.TestData.segmentationResult0;
     segmentationResult1 = testCase.TestData.segmentationResult1;
     trackingParameters = testCase.TestData.trackingParameters;
-    [assignment, unassigned] = tracking.linkSegmentationResults(segmentationResult0, ...
-                                                               segmentationResult1, ...
-                                                               trackingParameters);
-    assertEqual(testCase, size(assignment), [454, 2])
-    assertEqual(testCase, size(unassigned.firstInput), [12, 1])
-    assertEqual(testCase, size(unassigned.secondInput), [13, 1])
+    linkResult = tracking.linkSegmentedObjects(segmentationResult0, segmentationResult1, ...
+                                               trackingParameters);
+    assertEqual(testCase, size(linkResult.assigned), [454, 2])
+    assertEqual(testCase, size(linkResult.unassignedFromFirstInput), [12, 1])
+    assertEqual(testCase, size(linkResult.unassignedFromSecondInput), [13, 1])
 end

@@ -1,6 +1,5 @@
-function [assignment, unassigned] = linkSegmentationResults(segmentationResult1, ...
-                                                            segmentationResult2, ...
-                                                            trackingParameters)
+function linkResult = linkSegmentedObjects(segmentationResult1, segmentationResult2, ...
+                                           trackingParameters)
     % TODO: Add description
     arguments
         segmentationResult1 segmentation.Result
@@ -20,7 +19,6 @@ function [assignment, unassigned] = linkSegmentationResults(segmentationResult1,
     % Threshold the cost matrix to avoid linking detections that are too far away
     cost(cost > trackingParameters.maxCost) = Inf;
     % Link results using the Hungarian assignment algorithm (see https://www.mathworks.com/help/vision/ref/assigndetectionstotracks.html#d126e215950)
-    [assignment, unassignedTracks, unassignedDetections] = assignDetectionsToTracks(cost, ...
-                                                                                    trackingParameters.costOfNonAssignment);
-    unassigned = struct('firstInput', unassignedTracks, 'secondInput', unassignedDetections);
+    [assigned, unassignedTracks, unassignedDetections] = assignDetectionsToTracks(cost, trackingParameters.costOfNonAssignment);
+    linkResult = tracking.LinkResult(assigned, unassignedTracks, unassignedDetections);
 end
