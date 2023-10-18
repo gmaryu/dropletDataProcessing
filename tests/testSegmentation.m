@@ -1,5 +1,5 @@
 function tests = testSegmentation
-tests = functiontests(localfunctions);
+    tests = functiontests(localfunctions);
 end
 
 function setupOnce(testCase)
