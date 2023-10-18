@@ -38,18 +38,7 @@ classdef MicroscopePosition < handle
                 channel string
                 frame (1,1) {mustBeInteger}
             end
-            if strcmp(obj.microscope, 'new')
-                channelID = MicroscopeInfo.newEpiChannelID(channel);
-            elseif strcmp(obj.microscope, 'old')
-                channelID = MicroscopeInfo.oldEpiChannelID(channel);
-            else
-                error('Invalid microscope type. Must be "new" or "old"')
-            end
-            formattedFrame = sprintf("%09d", frame);
-            pathToFile = [obj.pathToData, "/img_", ...
-                          formattedFrame, "_", channelID, ...
-                          "-", channel, "_000.tif"];
-            pathToFile = strjoin(pathToFile, '');
+            pathToFile = fileIO.getPathToFile(obj.pathToData, channel, frame, obj.microscope);
         end
 
         function obj = segment(obj, segmentationParameters)
