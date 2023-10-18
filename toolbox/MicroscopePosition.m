@@ -7,8 +7,8 @@ classdef MicroscopePosition < handle
         timeDelta {mustBeNumeric} % Time between frames in minutes
         microscope string % 'new' or 'old' referring to which epifluorescence microscope was used
         pathToData string % Full path to the folder containing the data
-        segmentationResultArray (1,:) segmentation.Result
-        segmentationParameters segmentation.Parameters
+        segmentationResultArray (1,:) segmentation.Result % Array of segmentation results for each frame
+        segmentationParameters segmentation.Parameters % Parameters used for segmentation
     end
 
     methods
@@ -77,11 +77,8 @@ classdef MicroscopePosition < handle
             end
             pathToFile = obj.getPathToFile(channel, frame);
             image = imread(pathToFile);
-            image = histeq(image); % Adjust contrast for better visualization
             segmentationResult = obj.segmentationResultArray(frame);
-            labeledImage = segmentationResult.labeledImage;
-            overlay = labeloverlay(image, labeledImage);
-            imshow(overlay);
+            segmentationResult.plot(image)
         end
     end
 end
