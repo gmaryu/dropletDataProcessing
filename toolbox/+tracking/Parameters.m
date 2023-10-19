@@ -4,6 +4,9 @@ classdef Parameters
         % linkSegmentattionResults
         maxCost = 100;
         costOfNonAssignment = 100;
+        % createDropletTracks
+        minTrackLength = 3;
+        mustStartOnFirstFrame = false;
     end
 
     methods
