@@ -10,8 +10,7 @@ function [filteredLabeledImage, filteredRegionProperties] = filterRegions(bright
     % https://www.mathworks.com/help/images/ref/regionprops.html
     regionProperties = regionprops(labeledImage, brightFieldImage, ...
                                    'Centroid','Area', 'Circularity',...
-                                   'PixelIdxList','PixelValues', ...
-                                   'Eccentricity','EulerNumber');
+                                   'PixelIdxList', 'Eccentricity','EulerNumber');
     % Filter segmentation result
     tooSmall = [regionProperties.Area] < segmentationParameters.minSegmentedArea;
     tooLarge = [regionProperties.Area] > segmentationParameters.maxSegmentedArea;
@@ -23,4 +22,6 @@ function [filteredLabeledImage, filteredRegionProperties] = filterRegions(bright
     filteredLabeledImage = labeledImage;
     filteredLabeledImage(vertcat(regionProperties(filter).PixelIdxList)) = 0;
     filteredRegionProperties = regionProperties(~filter); 
+    % Re-label the filtered image
+    filteredLabeledImage = bwlabel(filteredLabeledImage);
 end

@@ -21,5 +21,6 @@ function segmentationResult = segmentBrightFieldImage(brightFieldImage, segmenta
                                                                                   labeledImage, ... 
                                                                                   segmentationParameters);
     % Create segmentation result
-    segmentationResult = segmentation.Result(filteredLabeledImage, filteredRegionProperties);
+    segmentationCentroids = segmentation.getSegmentationCentroids(filteredLabeledImage, filteredRegionProperties);
+    segmentationResult = segmentation.Result(filteredLabeledImage, segmentationCentroids);
 end
