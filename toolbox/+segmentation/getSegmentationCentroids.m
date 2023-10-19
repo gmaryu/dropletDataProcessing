@@ -5,7 +5,7 @@ function segmentationCentroids = getSegmentationCentroids(labeledImage, regionPr
         regionProperties (:,:) struct
     end
     % Get the label of each region
-    regionLabels = NaN(1,length(regionProperties));
+    regionLabels = NaN(length(regionProperties), 1);
     for i = 1:length(regionProperties)
         pixel = regionProperties(i).PixelIdxList(1,1);
         label = labeledImage(pixel);

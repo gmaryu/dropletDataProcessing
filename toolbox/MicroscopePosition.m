@@ -8,16 +8,17 @@ classdef MicroscopePosition < handle
         timeDelta {mustBeNumeric} % Time between frames in minutes
         microscope (1,1) string % 'new' or 'old' referring to which epifluorescence microscope was used
         pathToData (1,1) string % Full path to the folder containing the data
+        savePath (1,1) string % Full path to the folder where results will be saved
         positionMetadata (1,1) string % Metadata for this microscope position
-        segmentationResultArray (1,:) segmentation.Result % Array of segmentation results for each frame
         segmentationParameters (1,1) segmentation.Parameters % Parameters used for segmentation
+        segmentationResultArray (1,:) segmentation.Result % Segmentation result for each frame
         trackingParameters (1,1) tracking.Parameters % Parameters used for tracking
         trackingResult (1,1) tracking.Result % Tracking result for this microscope position
     end
 
     methods
         function obj = MicroscopePosition(id, channels, resolution, totalFrames, ...
-                                          timeDelta, microscope, pathToData, positionMetadata)
+                                          timeDelta, microscope, pathToData, savePath, positionMetadata)
             % TODO: Add description
             arguments
                 id (1,1) {mustBeInteger}
@@ -27,6 +28,7 @@ classdef MicroscopePosition < handle
                 timeDelta (1,1) double
                 microscope string
                 pathToData string
+                savePath string
                 positionMetadata (1,1) string
             end
             obj.id = id;
@@ -36,6 +38,7 @@ classdef MicroscopePosition < handle
             obj.timeDelta = timeDelta;
             obj.microscope = microscope;
             obj.pathToData = pathToData;
+            obj.savePath = savePath;
             obj.positionMetadata = positionMetadata;
         end
 
@@ -57,12 +60,20 @@ classdef MicroscopePosition < handle
             end
             obj.segmentationParameters = segmentationParameters;
             allSegmentationResults = segmentation.Result.empty(obj.totalFrames, 0);
+            fig = uifigure;
+            set(fig, 'Visible', 'on');
+            d = uiprogressdlg(fig,'Title','Please Wait',...
+                              'Message','Opening the application');
             for frame = 1:obj.totalFrames
+                d.Value = frame/obj.totalFrames;
+                d.Message = sprintf('Segmenting frame %d/%d...', frame, obj.totalFrames);
                 pathToFile = obj.getPathToFile('BF', frame);
                 image = imread(pathToFile);
-                allSegmentationResults(frame) = segmentation.segmentBrightFieldImage(image, segmentationParameters);
+                segmentationResult = segmentation.segmentBrightFieldImage(image, segmentationParameters);
+                allSegmentationResults(frame) = segmentationResult;
             end
             obj.segmentationResultArray = allSegmentationResults;
+            close(fig);
         end
 
         function plotSegmentation(obj, channel, frame)
@@ -72,12 +83,14 @@ classdef MicroscopePosition < handle
                 channel string
                 frame (1,1) {mustBeInteger}
             end
+            figure;
+            set(gcf, 'Visible', 'on');
             pathToFile = obj.getPathToFile(channel, frame);
             image = imread(pathToFile);
             segmentationResult = obj.segmentationResultArray(frame);
             segmentationResult.plot(image)
         end
-
+        
         function track(obj, trackingParameters)
             % TODO: Add description
             arguments
@@ -92,7 +105,13 @@ classdef MicroscopePosition < handle
 
             linkResultArray = tracking.LinkResult.empty(obj.totalFrames-1, 0);
             % Link segmentation results
+            fig = uifigure;
+            set(fig, 'Visible', 'on');
+            d = uiprogressdlg(fig,'Title','Please Wait',...
+                              'Message','Opening the application');
             for frame = 1:obj.totalFrames-1
+                d.Value = frame/obj.totalFrames;
+                d.Message = sprintf('Tracking frame %d/%d...', frame, obj.totalFrames);
                 segmentationResult1 = obj.segmentationResultArray(frame);
                 segmentationResult2 = obj.segmentationResultArray(frame+1);
                 linkResult = tracking.linkSegmentedObjects(segmentationResult1, ...
@@ -100,9 +119,12 @@ classdef MicroscopePosition < handle
                                                            trackingParameters);
                 linkResultArray(frame) = linkResult;
             end
+            close(fig);
             dropletArray = tracking.createDropletArray(linkResultArray, ...
                                                        trackingParameters);
+
             obj.trackingResult = tracking.Result(linkResultArray, dropletArray);
         end
+        
     end
 end

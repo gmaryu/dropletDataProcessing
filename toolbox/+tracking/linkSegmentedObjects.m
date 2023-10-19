@@ -6,10 +6,10 @@ function linkResult = linkSegmentedObjects(segmentationResult1, segmentationResu
         segmentationResult2 segmentation.Result
         trackingParameters tracking.Parameters
     end
-    regionProperties1 = segmentationResult1.regionProperties;
-    regionProperties2 = segmentationResult2.regionProperties;
-    predictions = vertcat(regionProperties1.Centroid);
-    detections = vertcat(regionProperties2.Centroid);
+    centroids1 = segmentationResult1.segmentationCentroids;
+    centroids2 = segmentationResult2.segmentationCentroids;
+    predictions = horzcat(centroids1.XCentroid, centroids1.YCentroid);
+    detections = horzcat(centroids2.XCentroid, centroids2.YCentroid);
     % Calculate the cost matrix
     cost = zeros(size(predictions, 1), size(detections, 1));
     for i = 1:size(predictions, 1)
