@@ -1,5 +1,14 @@
 function labeledImage = labelObjects(watershedMask, segmentationParameters)
-    % getDropletMarkers Label all objects in `watershedMask` using watershed
+    %   getDropletMarkers Label all objects in `watershedMask` using the watershed algorithm and morphological opening
+    %
+    %   labeledImage = getDropletMarkers(watershedMask, segmentationParameters)
+    %
+    %   Inputs:
+    %       watershedMask (numeric) - Output from `getMaskForWatershed`
+    %       segmentationParameters (segmentation.Parameters) - Parameters for segmentation
+    %
+    %   Output:
+    %       labeledImage (numeric) - Image with all objects labeled
     arguments
         watershedMask (:,:) {mustBeNumeric} % Output from getWatershedMask
         segmentationParameters segmentation.Parameters

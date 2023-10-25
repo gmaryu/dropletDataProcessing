@@ -10,7 +10,7 @@ function segmentationResult = segmentBrightFieldImage(brightFieldImage, segmenta
     end
     preProcessed = segmentation.preProcessBrightFieldImage(brightFieldImage, segmentationParameters);
     enhancedBordersImage = segmentation.enhanceDropletBorders(preProcessed, segmentationParameters);
-    watershedMask = segmentation.getMaskForWatershed(brightFieldImage, enhancedBordersImage, segmentationParameters);
+    watershedMask = segmentation.getMaskForWatershed(preProcessed, enhancedBordersImage, segmentationParameters);
     labeledImage = segmentation.labelObjects(watershedMask, segmentationParameters);
     [filteredLabeledImage, filteredRegionProperties] = segmentation.filterLabels(labeledImage, segmentationParameters);
     segmentationResult = segmentation.Result(filteredLabeledImage, filteredRegionProperties);

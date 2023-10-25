@@ -1,8 +1,17 @@
 function lambda = largestHessianEigenvalue(Dxx, Dxy, Dyy)
-    % largestHessianEigenvalue Calculates the eigenvalues of the hessian matrix and returns the largest one
+    %   largestHessianEigenvalue Calculates the eigenvalues of the hessian matrix and returns the largest one
     %
-    % Function adapted from https://github.com/timjerman/JermanEnhancementFilter
-    % by Zhengda Li first and then by Franco Tavella
+    %   lambda = largestHessianEigenvalue(Dxx, Dxy, Dyy)
+    %
+    %   Inputs:
+    %       Dxx, Dxy, Dyy: Second order derivatives of the image obtained with `hessian2D`
+    %
+    %   Outputs:
+    %       lambda: Largest eigenvalue of the hessian matrix
+    %
+    %   Note:
+    %       Function adapted from https://github.com/timjerman/JermanEnhancementFilter
+    %       first by Zhengda Li and then by Franco Tavella
     arguments
         Dxx (:,:) {mustBeNumeric}
         Dxy (:,:) {mustBeNumeric}

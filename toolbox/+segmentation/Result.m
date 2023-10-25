@@ -14,11 +14,15 @@ classdef Result < handle
 
     methods
         function obj = Result(labeledImage, regionProperties)
+            %  Creates a segmentation result object
+            %
+            %   Inputs:
+            %       labeledImage - A labeled image where each pixel is assigned a label
+            %       regionProperties - A struct array containing the properties of each region
             arguments
                 labeledImage (:,:) {mustBeNumeric};
                 regionProperties (:,:) struct;
             end
-            % Creates a segmentation result object
             obj.labeledImage = labeledImage;
             obj.regionProperties = regionProperties;
         end
@@ -51,13 +55,19 @@ classdef Result < handle
         end
 
         function plot(obj, originalImage)
-            % plot Plots the segmentation result on top of the original image as an overlay
+            %   plot Plots the segmentation result on top of the original image as an overlay
+            %
+            %   Inputs:
+            %       originalImage - The original image on top of which the segmentation result should be plotted
+            %
+            %   Notes:
+            %       - The original image is adjusted for better visualization with `histeq`
+            %       - If the plot does not show up, try calling `figure` before calling this method or use set(gcf, 'Visible', 'on')
             arguments
                 obj segmentation.Result
                 originalImage (:,:) {mustBeNumeric}
             end
-            % Adjust contrast for better visualization
-            image = histeq(originalImage); 
+            image = histeq(originalImage); % Adjust contrast for better visualization
             overlay = labeloverlay(image, obj.labeledImage);
             imshow(overlay);
         end

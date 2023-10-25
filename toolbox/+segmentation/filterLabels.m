@@ -4,12 +4,12 @@ function [filteredLabeledImage, filteredRegionProperties] = filterLabels(labeled
     %   [filteredLabeledImage, filteredRegionProperties] = filterLabels(labeledImage, segmentationParameters)
     %
     %   Inputs:
-    %   labeledImage: labeled image of droplets created by `getDropletLabels`
-    %   segmentationParameters: segmentation.Parameters object
+    %       labeledImage (MxN) double - labeled image of droplets created by `getDropletLabels`
+    %       segmentationParameters (1x1) segmentation.Parameters - Parameters for segmentation
     %   
     %   Outputs:
-    %   filteredLabeledImage: new labeled image with only those labels that pass the filter
-    %   filteredRegionProperties: Properties of the filtered labels (Label, Area, Centroid, Circularity, Eccentricity)
+    %       filteredLabeledImage (MxN) double - New labeled image with only those labels that pass the filter
+    %       filteredRegionProperties (:,:) struct - Properties of the filtered labels (Label, Area, Centroid, Circularity, Eccentricity)
     arguments
         labeledImage (:,:) {mustBeNumeric}
         segmentationParameters segmentation.Parameters

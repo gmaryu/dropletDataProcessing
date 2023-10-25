@@ -11,7 +11,7 @@ classdef Parameters
     %       segmentationParameters.maxEccentricity = 0.8;
     %
     %   Parameters properties:
-    %       resolution - Resolution relative to 1x1 binning with 20x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
+    %       resolution - Resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
     %       illuminationCorrectionFilterSize - Size of the Gaussian filter used for illumination correction.
     %       gaussianFilterSizeLarge - Size of the large Gaussian filter used for border enhancement.
     %       gaussianFilterSizeSmall - Size of the small Gaussian filter used for border enhancement.
@@ -29,7 +29,7 @@ classdef Parameters
     %       maxNumberOfHoles - Maximum number of holes in droplets. Related to EulerNumber region property.
     %       minCircularity - Minimum circularity of droplets. Value between 0 (line segment) and 1 (perfect circle).
     properties
-        % Resolution relative to 1x1 binning with 20x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
+        % Resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
         resolution (1,1) double = 1; % Image property 
         % Size of the Gaussian filter used for illumination correction
         illuminationCorrectionFilterSize (1,1) double = 30; % preProcessBrightFieldImage
@@ -67,10 +67,14 @@ classdef Parameters
 
     methods
         function obj = Parameters(resolution, minDropletRadius, maxDropletRadius)
-            % Creates a new Parameters object. If no arguments are provided, default values are used
-            % but resolution, minDropletRadius and maxDropletRadius can be provided as optional arguments
+            %   Creates a new Parameters object. If no arguments are provided, default values are used.
+            %
+            %   Optional Inputs:
+            %       resolution (1,1) double = 1 % 1 for 1x1 binning, 0.5 for 2x2 binning, etc. Assumes 4x objective was used
+            %       minDropletRadius (1,1) double = 20 % Minimum droplet radius in um
+            %       maxDropletRadius (1,1) double = 70 % Maximum droplet radius in um 
             arguments
-                resolution (1,1) double = 1 % 1 for 1x1 binning, 0.5 for 2x2 binning, etc. Assumes 20x objective was used
+                resolution (1,1) double = 1 % 1 for 1x1 binning, 0.5 for 2x2 binning, etc. Assumes 4x objective was used
                 minDropletRadius (1,1) double = 20 % Minimum droplet radius in um
                 maxDropletRadius (1,1) double = 70 % Maximum droplet radius in um
             end

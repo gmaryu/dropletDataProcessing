@@ -1,11 +1,20 @@
 function [Dxx, Dxy, Dyy] = hessian2D(image, segmentationParameters)
-    %  hessian2D Filters the `image` using the second derivatives of a Gaussian with standard deviation `sigma`
+    %   hessian2D Filters the `image` using the second derivatives of a Gaussian with standard deviation `sigma`
     % 
-    % outputs,
-    %   Dxx, Dxy, Dyy: The 2nd derivatives, scale-corrected
+    %   [Dxx, Dxy, Dyy] = hessian2D(image, sigma)
     %
-    % Function adapted from https://github.com/timjerman/JermanEnhancementFilter
-    % by Zhengda Li first and then by Franco Tavella
+    %   Inputs:
+    %       image (MxN) double - Input image to be processed
+    %       segmentation.Parameters (1x1) segmentation.Parameters - Parameters of the segmentation
+    %
+    %   Outputs:
+    %    Dxx (MxN) double - Second derivative in x, scale corrected
+    %    Dxy (MxN) double - Second derivative in x and y, scale corrected
+    %    Dyy (MxN) double - Second derivative in y, scale corrected
+    %
+    %   Note:
+    %       Function adapted from https://github.com/timjerman/JermanEnhancementFilter
+    %       first by Zhengda Li and then by Franco Tavella
     arguments
         image (:,:) {mustBeNumeric}
         segmentationParameters (1,1) segmentation.Parameters
