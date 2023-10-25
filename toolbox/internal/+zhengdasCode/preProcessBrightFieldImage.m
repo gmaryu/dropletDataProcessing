@@ -4,7 +4,7 @@ function processedImage = preProcessBrightFieldImage(brightFieldImage, segmentat
         brightFieldImage (:,:) {mustBeNumeric}
         segmentationParameters zhengdasCode.Parameters
     end
-    
+    brightFieldImage = imflatfield(brightFieldImage, 30);
     brightFieldImage = double(brightFieldImage);
     % Normalize
     imgMin = min(brightFieldImage(:));

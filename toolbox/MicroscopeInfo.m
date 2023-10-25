@@ -5,7 +5,6 @@ classdef MicroscopeInfo
                                      [0, 1, 2, 4, 5]);
         oldEpiChannelID = dictionary(["BF", "CFP", "mCherry", "Custom", "YFP"], ...
                                      [4, 5, 3, 8, 6]);
-        % TODO: Add pixel to micron conversion
-        % pixelToMicron = 1;
+        micronToPixel = 1645.0 / 2000.0; % 1645 px = 2000 um at resolution 1 for 20x objective
     end
 end
