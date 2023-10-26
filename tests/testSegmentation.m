@@ -8,7 +8,7 @@ classdef testSegmentation < matlab.unittest.TestCase
     properties
         testImagePath = 'images/segmentation_test_images/'; % Location of bright field images to segment
         groundTruthPath = 'tests/segmentation_ground_truth/'; 
-        segmentationParameters = segmentation.Parameters(1, 21.6915, 68.5945);
+        segmentationParameters = segmentation.Parameters(1, 21.6915, 68.5945); % To match legacy thresholds
     end
 
     properties (TestParameter)
@@ -30,8 +30,10 @@ classdef testSegmentation < matlab.unittest.TestCase
             toolboxOverlay = labeloverlay(histeq(brightFieldImage), segmentationResult.labeledImage);
             legacyOverlay = labeloverlay(histeq(brightFieldImage), legacyResult.labeledImage);
             labelDifference = logical(segmentationResult.labeledImage) - logical(legacyResult.labeledImage);
-            labelDifference = bwareaopen(labelDifference, 100);
-            % remove small objects
+            labelDifference = bwareaopen(labelDifference, 100); % Remove small objects
+            differenceRegions = bwlabel(labelDifference);
+            numRegions = length(unique(differenceRegions));
+            percentDiff = 100 * numRegions / size(legacyResult.regionProperties, 1);
 
             figure('visible', 'off');
             subplot(1, 3, 1);
@@ -48,7 +50,7 @@ classdef testSegmentation < matlab.unittest.TestCase
             exportgraphics(gcf, fileName, 'Resolution', 300);
             close;
 
-            disp('Fininshed with ' + imageFileNames + '.tif')
+            disp('Fininshed with ' + imageFileNames + '.tif. Difference percentage: ' + string(percentDiff))
         end
     end
 end
