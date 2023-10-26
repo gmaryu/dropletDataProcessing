@@ -31,8 +31,8 @@ classdef Result < handle
             %   save Saves the segmentation result to a .mat file at folderPath/fileName.m
             %
             %   Inputs:
-            %       folderPath - Path to the folder where the file should be saved
-            %       fileName - Name of the file to be saved
+            %       folderPath string - Path to the folder where the file should be saved
+            %       fileName string - Name of the file to be saved
             %
             %   Note:
             %       If folderPath does not end with a slash, one will be added automatically
