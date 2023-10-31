@@ -1,25 +1,70 @@
 classdef MicroscopePosition < handle
-    % TODO: Add description
+    %   MicroscopePosition Class to handle all the results for the collection of images in a single microscope position
+    %
+    %   Constructor:
+    %       position = MicroscopePosition(id, channels, totalFrames, timeDelta, microscope, ...
+    %                                     dataFolder, saveFolder, positionMetadata)
+    %
+    %   Properties:
+    %       id (1,1) {mustBeInteger} % Unique identifier for this microscope position
+    %       channels (1,:) string % List of channels of interest
+    %       totalFrames {mustBeNumeric} % Total number of frames
+    %       timeDelta {mustBeNumeric} % Time between frames in minutes
+    %       microscope (1,1) string % 'new' or 'old' referring to which epifluorescence microscope was used
+    %       dataFolder (1,1) string % Full path to the folder containing the data
+    %       saveFolder (1,1) string % Full path to the folder where results will be saved
+    %       positionMetadata (1,1) string % Metadata for this microscope position
+    %       segmentationParameters (1,1) segmentation.Parameters % Parameters used for segmentation
+    %       segmentationResultArray (1,:) segmentation.Result % Segmentation result for each frame
+    %       trackingParameters (1,1) tracking.Parameters % Parameters used for tracking
+    %       trackingResult (1,1) tracking.Result % Tracking result for this microscope position
+    %
+    %   Methods:
+    %       pathToFile = getPathToFile(obj, channel, frame) % Returns the full path to the file for the given channel and frame
+    %       segment(obj, segmentationParameters) % Performs segmentation on all frames in the microscope position
+    %       plotSegmentation(obj, channel, frame) % Plots the segmentation result for the given channel and frame as a label overlay
     properties
-        id (1,1) {mustBeInteger} % Unique identifier for this microscope position
-        channels (1,:) string % List of channels
-        resolution {mustBeNumeric} % 1.0 for 1x1, 0.5 for 2x2, etc.
-        totalFrames {mustBeNumeric} % Total number of frames
-        timeDelta {mustBeNumeric} % Time between frames in minutes
-        microscope (1,1) string % 'new' or 'old' referring to which epifluorescence microscope was used
-        pathToData (1,1) string % Full path to the folder containing the data
-        savePath (1,1) string % Full path to the folder where results will be saved
-        positionMetadata (1,1) string % Metadata for this microscope position
-        segmentationParameters (1,1) segmentation.Parameters % Parameters used for segmentation
-        segmentationResultArray (1,:) segmentation.Result % Segmentation result for each frame
-        trackingParameters (1,1) tracking.Parameters % Parameters used for tracking
-        trackingResult (1,1) tracking.Result % Tracking result for this microscope position
+        % Unique identifier for this microscope position
+        id (1,1) {mustBeInteger} 
+        % List of channels of interest
+        channels (1,:) string 
+        % Microscope resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
+        resolution (1,1) double
+        % Total number of frames
+        totalFrames {mustBeNumeric} 
+        % Time between frames in minutes
+        timeDelta {mustBeNumeric} 
+        % 'new' or 'old' referring to which epifluorescence microscope was used
+        microscope (1,1) string 
+        % Full path to the folder containing the data
+        dataFolder (1,1) string 
+        % Full path to the folder where results will be saved
+        saveFolder (1,1) string 
+        % Metadata for this microscope position
+        positionMetadata (1,1) string 
+        % Parameters used for segmentation
+        segmentationParameters (1,1) segmentation.Parameters 
+        % Segmentation result for each frame
+        segmentationResultArray (1,:) segmentation.Result 
+        % Parameters used for tracking
+        trackingParameters (1,1) tracking.Parameters
     end
 
     methods
         function obj = MicroscopePosition(id, channels, resolution, totalFrames, ...
-                                          timeDelta, microscope, pathToData, savePath, positionMetadata)
-            % TODO: Add description
+                                          timeDelta, microscope, dataFolder, saveFolder, positionMetadata)
+            %   Creates a new MicroscopePosition object
+            %
+            %   Inputs:
+            %    id (1,1) {mustBeInteger} % Unique identifier for this microscope position
+            %    channels (1,:) string % List of channels of interest
+            %    resolution (1,1) double % Microscope resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
+            %    totalFrames {mustBeNumeric} % Total number of frames
+            %    timeDelta {mustBeNumeric} % Time between frames in minutes
+            %    microscope (1,1) string % 'new' or 'old' referring to which epifluorescence microscope was used
+            %    dataFolder (1,1) string % Full path to the folder containing the data
+            %    saveFolder (1,1) string % Full path to the folder where results will be saved
+            %    positionMetadata (1,1) string % Metadata for this microscope position
             arguments
                 id (1,1) {mustBeInteger}
                 channels (1,:) string
@@ -27,8 +72,8 @@ classdef MicroscopePosition < handle
                 totalFrames (1,1) {mustBeInteger}
                 timeDelta (1,1) double
                 microscope string
-                pathToData string
-                savePath string
+                dataFolder string
+                saveFolder string
                 positionMetadata (1,1) string
             end
             obj.id = id;
@@ -37,27 +82,39 @@ classdef MicroscopePosition < handle
             obj.totalFrames = totalFrames;
             obj.timeDelta = timeDelta;
             obj.microscope = microscope;
-            obj.pathToData = pathToData;
-            obj.savePath = savePath;
+            obj.dataFolder = dataFolder;
+            obj.saveFolder = saveFolder;
             obj.positionMetadata = positionMetadata;
         end
 
         function pathToFile = getPathToFile(obj, channel, frame)
-            % TODO: Add description
+            %   getPathToFile Returns the full path to the file for the given channel and frame
+            %
+            %   Inputs:
+            %    channel string % Channel of interest
+            %    frame (1,1) {mustBeInteger} % Frame of interest
             arguments
                 obj MicroscopePosition
                 channel string
                 frame (1,1) {mustBeInteger}
             end
-            pathToFile = fileIO.getPathToFile(obj.pathToData, channel, frame, obj.microscope);
+            pathToFile = fileIO.getPathToFile(obj.dataFolder, channel, frame, obj.microscope);
         end
 
-        function obj = segment(obj, segmentationParameters)
-            % TODO: Add description
+        function segment(obj, segmentationParameters)
+            %   segment Performs segmentation on all frames in the microscope position
+            %
+            %   Inputs:
+            %    segmentationParameters segmentation.Parameters % Parameters used for segmentation
+            %
+            %   Notes:
+            %    - This function will display a progress bar
+            %    - The resolution of the microscope position must be set before calling this function
             arguments
                 obj MicroscopePosition
                 segmentationParameters segmentation.Parameters
             end
+            segmentationParameters.resolution = obj.resolution;
             obj.segmentationParameters = segmentationParameters;
             allSegmentationResults = segmentation.Result.empty(obj.totalFrames, 0);
             fig = uifigure;
@@ -77,7 +134,11 @@ classdef MicroscopePosition < handle
         end
 
         function plotSegmentation(obj, channel, frame)
-            % TODO: Add description
+            %   plotSegmentation Plots the segmentation result for the given channel and frame as a label overlay
+            %
+            %   Inputs:
+            %    channel string % Channel of interest
+            %    frame (1,1) {mustBeInteger} % Frame of interest
             arguments
                 obj MicroscopePosition
                 channel string
@@ -92,7 +153,8 @@ classdef MicroscopePosition < handle
         end
         
         function track(obj, trackingParameters)
-            % TODO: Add description
+            % TODO: Implement
+            %{
             arguments
                 obj MicroscopePosition
                 trackingParameters tracking.Parameters
@@ -124,7 +186,8 @@ classdef MicroscopePosition < handle
                                                        trackingParameters);
 
             obj.trackingResult = tracking.Result(linkResultArray, dropletArray);
+            %}
+            obj.trackingParameters = trackingParameters;
         end
-        
     end
 end
