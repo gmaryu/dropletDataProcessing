@@ -5,7 +5,7 @@ function debugSegmentation(brightFieldImage, saveFilePath, segmentationParameter
     %
     %   Inputs:
     %       brightFieldImage (MxN) numeric - Bright field image to debug
-    %       savePath (1,1) string - Full path including filename for saving the resulting figure. Please include the .png extension
+    %       savePath (1,1) string - Full path including filename for saving the resulting figure. Please include the .png extension. If left empty, the figure will not be saved but only displayed.
     %       segmentationParameters (1,1) segmentation.Parameters - Parameters to use for segmentation
     arguments
         brightFieldImage (:,:) {mustBeNumeric}
@@ -19,7 +19,9 @@ function debugSegmentation(brightFieldImage, saveFilePath, segmentationParameter
     labeledImage = segmentation.labelObjects(watershedMask, segmentationParameters);
     [filteredLabeledImage, ~] = segmentation.filterLabels(labeledImage, segmentationParameters);
 
-    figure('visible', 'off');
+    if saveFilePath ~= ""
+        figure('Visible', 'off');
+    end
     subplot(2, 3, 1);
     imshow(histeq(brightFieldImage));
     title('Raw Image');
@@ -40,6 +42,11 @@ function debugSegmentation(brightFieldImage, saveFilePath, segmentationParameter
     filteredLabelsOverlay = labeloverlay(preProcessed, filteredLabeledImage);
     imshow(filteredLabelsOverlay);
     title('Filtered labels')
-    exportgraphics(gcf, saveFilePath, 'Resolution', 500);
-    close;
+    if saveFilePath ~= ""
+        exportgraphics(gcf, saveFilePath, 'Resolution', 500);
+        close;
+    else
+        % Display current figure
+        shg;
+    end
 end

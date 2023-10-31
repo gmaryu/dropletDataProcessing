@@ -67,9 +67,11 @@ classdef Result < handle
                 obj segmentation.Result
                 originalImage (:,:) {mustBeNumeric}
             end
+            figure;
             image = histeq(originalImage); % Adjust contrast for better visualization
             overlay = labeloverlay(image, obj.labeledImage);
             imshow(overlay);
+            shg;
         end
     end
 end

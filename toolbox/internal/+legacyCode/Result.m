@@ -37,5 +37,25 @@ classdef Result
             fullPath = folderPath + fileName;
             save (fullPath, 'obj', '-v7.3');
         end
+
+        function plot(obj, originalImage)
+            %   plot Plots the segmentation result on top of the original image as an overlay
+            %
+            %   Inputs:
+            %       originalImage - The original image on top of which the segmentation result should be plotted
+            %
+            %   Notes:
+            %       - The original image is adjusted for better visualization with `histeq`
+            %       - If the plot does not show up, try calling `figure` before calling this method or use set(gcf, 'Visible', 'on')
+            arguments
+                obj legacyCode.Result
+                originalImage (:,:) {mustBeNumeric}
+            end
+            figure;
+            image = histeq(originalImage); % Adjust contrast for better visualization
+            overlay = labeloverlay(image, obj.labeledImage);
+            imshow(overlay);
+            shg;
+        end
     end
 end
