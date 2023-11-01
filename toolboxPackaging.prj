@@ -1,28 +1,82 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="3543648890" file="E:\Project 13 - Droplet tracking\dropletDataProcessing\toolboxPackaging.prj" location="E:\Project 13 - Droplet tracking\dropletDataProcessing" name="toolboxPackaging" target="target.toolbox" target-name="Package Toolbox">
-    <param.appname>Droplet Data Processing Toolbox</param.appname>
+  <configuration file="E:\Project 13 - Droplet tracking\dropletDataProcessing\toolboxPackaging.prj" location="E:\Project 13 - Droplet tracking\dropletDataProcessing" name="toolboxPackaging" target="target.toolbox" target-name="Package Toolbox">
+    <param.appname>Droplet Data Processing</param.appname>
     <param.authnamewatermark>Yang Lab</param.authnamewatermark>
-    <param.email />
+    <param.email>yang-lab-all@umich.edu</param.email>
     <param.company>University of Michigan</param.company>
-    <param.summary />
+    <param.summary>Tools for the tracking and analysis of microfluidic droplets</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\images\toolboxPackaging.png</param.screenshot>
-    <param.version>0.0</param.version>
-    <param.output>${PROJECT_ROOT}\Droplet Data Processing Toolbox.mltbx</param.output>
+    <param.version>0.2</param.version>
+    <param.output>${PROJECT_ROOT}\Droplet Data Processing.mltbx</param.output>
     <param.products.name />
     <param.products.id />
     <param.products.version />
     <param.platforms />
-    <param.guid>d44574cb-b80e-42ca-8b62-1190c3f5685f</param.guid>
-    <param.exclude.filters />
+    <param.guid>a8ea2282-cf60-401c-81c5-4bc476ae991b</param.guid>
+    <param.exclude.filters>% List files contained in your toolbox folder that you would like to exclude
+% from packaging.  Excludes should be listed relative to the toolbox folder.
+% Some examples of how to specify excludes are provided below:
+%
+% A single file in the toolbox folder:
+% .svn
+%
+% A single file in a subfolder of the toolbox folder:
+% example/.svn
+%
+% All files in a subfolder of the toolbox folder:
+% example/*
+%
+% All files of a certain name in all subfolders of the toolbox folder:
+% **/.svn
+%
+% All files matching a pattern in all subfolders of the toolbox folder:
+% **/*.bak
+%
+.git*
+debug/</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
-    <param.examples />
+    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;examples&gt;
+   &lt;exampleCategory name="doc"&gt;
+      &lt;example name="landingPage" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/landingPage.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/landingPage.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+&lt;/examples&gt;</param.examples>
     <param.demosxml />
     <param.apps />
     <param.registered.apps />
-    <param.docs />
-    <param.getting.started.guide />
-    <param.matlabpath.excludes />
+    <param.docs>${PROJECT_ROOT}\info.xml</param.docs>
+    <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
+    <param.matlabpath.excludes>
+      <item>/.git</item>
+      <item>/.git/hooks</item>
+      <item>/.git/info</item>
+      <item>/.git/logs</item>
+      <item>/.git/logs/refs</item>
+      <item>/.git/logs/refs/heads</item>
+      <item>/.git/logs/refs/remotes</item>
+      <item>/.git/logs/refs/remotes/origin</item>
+      <item>/.git/objects</item>
+      <item>/.git/objects/60</item>
+      <item>/.git/objects/64</item>
+      <item>/.git/objects/7d</item>
+      <item>/.git/objects/84</item>
+      <item>/.git/objects/ae</item>
+      <item>/.git/objects/d7</item>
+      <item>/.git/objects/d9</item>
+      <item>/.git/objects/e0</item>
+      <item>/.git/objects/info</item>
+      <item>/.git/objects/pack</item>
+      <item>/.git/refs</item>
+      <item>/.git/refs/heads</item>
+      <item>/.git/refs/remotes</item>
+      <item>/.git/refs/remotes/origin</item>
+      <item>/.git/refs/tags</item>
+    </param.matlabpath.excludes>
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons />
@@ -42,30 +96,21 @@
     <param.additional.sw.mac.url />
     <param.additional.sw.linux.url />
     <unset>
-      <param.email />
-      <param.summary />
       <param.description />
       <param.output />
       <param.products.name />
       <param.products.id />
       <param.products.version />
       <param.platforms />
-      <param.exclude.filters />
       <param.exclude.pcodedmfiles />
-      <param.examples />
       <param.demosxml />
       <param.apps />
       <param.registered.apps />
-      <param.docs />
-      <param.getting.started.guide />
-      <param.matlabpath.excludes />
       <param.javaclasspath.excludes />
       <param.exported.on.package />
       <param.required.addons />
       <param.matlab.project.id />
       <param.matlab.project.name />
-      <param.release.start />
-      <param.release.end />
       <param.release.current.only />
       <param.compatiblity.windows />
       <param.compatiblity.macos />
@@ -82,10 +127,10 @@
       <file>${PROJECT_ROOT}</file>
     </fileset.rootdir>
     <fileset.rootfiles>
-      <file>${PROJECT_ROOT}\.git</file>
-      <file>${PROJECT_ROOT}\.gitattributes</file>
-      <file>${PROJECT_ROOT}\.gitignore</file>
+      <file>${PROJECT_ROOT}\demos.xml</file>
+      <file>${PROJECT_ROOT}\doc</file>
       <file>${PROJECT_ROOT}\images</file>
+      <file>${PROJECT_ROOT}\info.xml</file>
       <file>${PROJECT_ROOT}\license.txt</file>
       <file>${PROJECT_ROOT}\README.md</file>
       <file>${PROJECT_ROOT}\release</file>
@@ -97,7 +142,7 @@
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="Droplet Data Processing Toolbox.mltbx" optional="false">E:\Project 13 - Droplet tracking\dropletDataProcessing\Droplet Data Processing Toolbox.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="Droplet Data Processing.mltbx" optional="false">E:\Project 13 - Droplet tracking\dropletDataProcessing\Droplet Data Processing.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
