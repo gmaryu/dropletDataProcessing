@@ -15,12 +15,8 @@ classdef Parameters
     %       illuminationCorrectionFilterSize - Size of the Gaussian filter used for illumination correction.
     %       gaussianFilterSizeLarge - Size of the large Gaussian filter used for border enhancement.
     %       gaussianFilterSizeSmall - Size of the small Gaussian filter used for border enhancement.
-    %       hessianSigma - Sigma of the Gaussian filter used for Hessian matrix calculation.
-    %       hessianEigenvalueScale - Scale of the eigenvalues of the Hessian matrix used for border enhancement.
-    %       thresholdFactor - Factor used to scale Otsu's threshold for border enhancement.
-    %       borderSmallAreaThreshold - Threshold used to remove small regions after border enhancement.
-    %       borderMediumAreaThreshold - Threshold used to characterize medium-sized regions after border enhancement.
-    %       borderEccentricityCutoff - Eccentricity cutoff used to characterize regions after border enhancement.
+    %       borderAreaThreshold - Threshold used to remove small regions after border enhancement.
+    %       borderSolidityThreshold - Threshold used to characterize the solidity of regions after border enhancement.
     %       HMaximaSuppressionThreshold - Threshold used to suppress local maxima in the H-maxima transform.
     %       openingDiskSize - Size of the disk used for morphological opening after applying the watershed algorithm.
     %       minDropletRadius - Minimum droplet radius in um.
@@ -37,19 +33,11 @@ classdef Parameters
         gaussianFilterSizeLarge (1,1) double = 6; % enhanceDropletBorders
         % Size of the small Gaussian filter used for border enhancement
         gaussianFilterSizeSmall (1,1) double = 2; % enhanceDropletBorders
-        % Sigma of the Gaussian filter used for Hessian matrix calculation
-        hessianSigma (1,1) double = 3; % enhanceDropletBorders
-        % Scale of the eigenvalues of the Hessian matrix used for border enhancement
-        hessianEigenvalueScale (1,1) double = 0.0005; % enhanceDropletBorders
-        % Factor used to scale Otsu's threshold for border enhancement
-        thresholdFactor (1,1) double = 0.25; % enhanceDropletBorders
         % Threshold used to remove small regions after border enhancement
-        borderSmallAreaThreshold (1,1) double = 50; % enhanceDropletBorders
-        % Threshold used to characterize medium-sized regions after border enhancement
-        borderMediumAreaThreshold (1,1) double = 1000; % enhanceDropletBorders
-        % Eccentricity cutoff used to characterize regions after border enhancement
-        borderEccentricityCutoff (1,1) double = 0.95; % enhanceDropletBorders
-        % Threshold used to suppress local maxima in the H-maxima transform
+        borderAreaThreshold (1,1) double = 1000; % enhanceDropletBorders
+        % Threshold used to characterize the solidity of regions after border enhancement
+        borderSolidityThreshold (1,1) double = 0.75; % enhanceDropletBorders
+        % Threshold used to suppress local maxima in the H-maxima transform 
         HMaximaSuppressionThreshold (1,1) double = 2; % getDropletMarkers
         % Size of the disk used for morphological opening after applying the watershed algorithm
         openingDiskSize (1,1) double = 2; % labelObjects
@@ -58,11 +46,11 @@ classdef Parameters
         % Maximum droplet radius in um
         maxDropletRadius (1,1) double = 70; % filterLabels
         % Maximum eccentricity of droplets. Value between 0 (perfect circle) and 1 (line segment)
-        maxEccentricity (1,1) double = 0.95; % filterLabels
+        maxEccentricity (1,1) double = 0.8; % filterLabels
         % Maximum number of holes in droplets. Related to EulerNumber region property
         maxNumberOfHoles (1,1) double = 0; % filterLabels
         % Minimum circularity of droplets. Value between 0 (line segment) and 1 (perfect circle)
-        minCircularity (1,1) double = 0.75; % filterLabels
+        minCircularity (1,1) double = 0.79; % filterLabels
     end
 
     methods

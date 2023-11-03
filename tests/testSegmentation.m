@@ -29,13 +29,15 @@ classdef testSegmentation < matlab.unittest.TestCase
             % Comparison
             toolboxOverlay = labeloverlay(histeq(brightFieldImage), segmentationResult.labeledImage);
             legacyOverlay = labeloverlay(histeq(brightFieldImage), legacyResult.labeledImage);
-            labelDifference = logical(segmentationResult.labeledImage) - logical(legacyResult.labeledImage);
-            labelDifference = bwareaopen(labelDifference, 100); % Remove small objects
+            labelDifference = double(logical(segmentationResult.labeledImage)) - double(logical(legacyResult.labeledImage));
+            labelDifference(~bwareaopen(labelDifference, 100)) = 0; % Remove small objects
+            labelDifference(labelDifference == 1) = 1; % Blue, on toolbox not on legacy
+            labelDifference(labelDifference == -1) = 2; % Red, on legacy not on toolbox
             differenceRegions = bwlabel(labelDifference);
             numRegions = length(unique(differenceRegions));
             percentDiff = 100 * numRegions / size(legacyResult.regionProperties, 1);
 
-            figure('visible', 'off');
+            figure('Visible', 'off');
             subplot(1, 3, 1);
             imshow(toolboxOverlay);
             title('Toolbox');
@@ -43,11 +45,12 @@ classdef testSegmentation < matlab.unittest.TestCase
             imshow(legacyOverlay);
             title('Legacy Code');
             subplot(1, 3, 3);
-            imshow(labelDifference);
-            title('Label Difference')
+            overlay = labeloverlay(histeq(brightFieldImage), labelDifference, "Colormap", "flag"); % Red, Blue
+            imshow(overlay);
+            title({'Label Difference', '\color{blue}Toolbox-only, \color{red}Legacy-only'})
             figSavePath = pwd() + "/debug/test_segmentation/";
-            fileName = figSavePath + "overlay_" + fileNameComponents(end) + ".png";
-            exportgraphics(gcf, fileName, 'Resolution', 300);
+            fileName = figSavePath + "comparison_" + fileNameComponents(end) + ".png";
+            exportgraphics(gcf, fileName, 'Resolution', 500);
             close;
 
             disp('Fininshed with ' + imageFileNames + '.tif. Difference percentage: ' + string(percentDiff))

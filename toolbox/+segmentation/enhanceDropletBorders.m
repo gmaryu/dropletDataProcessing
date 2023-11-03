@@ -18,20 +18,15 @@ function enhancedImage = enhanceDropletBorders(preProcessedBrightFieldImage, seg
     smallFilter = imgaussfilt(preProcessedBrightFieldImage, segmentationParameters.gaussianFilterSizeSmall);
     dropletBorders = largeFilter - smallFilter;
     dropletBorders(dropletBorders < 0) = 0;
-    % Hessian filtering
-    [Dxx, Dxy, Dyy] = segmentation.hessian2D(dropletBorders, segmentationParameters);
-    lambda = segmentation.largestHessianEigenvalue(Dxx, Dxy, Dyy);
-    reconstruction = (ones(size(dropletBorders)) - exp(-(lambda.^2)/segmentationParameters.hessianEigenvalueScale));
-    hessianFiltered = reconstruction .* (lambda < 0) .* dropletBorders;
+    hessianFiltered = dropletBorders;
     % Thresholding
-    threshold = graythresh(hessianFiltered) * segmentationParameters.thresholdFactor;
+    threshold = graythresh(hessianFiltered);
     binaryMask = hessianFiltered > threshold;
     % Region filtering
-    p = regionprops(logical(binaryMask), 'Area', 'Eccentricity', 'PixelIdxList');
-    tooSmall = [p.Area] < (segmentationParameters.borderSmallAreaThreshold * segmentationParameters.resolution ^ 2);
-    mediumSize = [p.Area] < segmentationParameters.borderMediumAreaThreshold * segmentationParameters.resolution ^ 2;
-    tooSymmetric = [p.Eccentricity] < segmentationParameters.borderEccentricityCutoff;
-    toRemove = tooSmall | (mediumSize & tooSymmetric); 
+    p = regionprops(logical(binaryMask), 'Area', 'Solidity', 'PixelIdxList');
+    tooSmall = [p.Area] < (segmentationParameters.borderAreaThreshold * segmentationParameters.resolution ^ 2);
+    tooSolid = [p.Solidity] > (segmentationParameters.borderSolidityThreshold);
+    toRemove = tooSmall & tooSolid; 
     labels = bwlabel(binaryMask);
     filteredLabels = labels;
     filteredLabels(vertcat(p(toRemove).PixelIdxList)) = 0;
