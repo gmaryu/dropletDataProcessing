@@ -1,21 +1,25 @@
 function linkResult = linkSegmentedObjects(segmentationResult1, segmentationResult2, ...
                                            trackingParameters)
-    % TODO: Add description
+    %   linkSegmentedObjects Links two segmentation results by matching labels from the first result to the second result. The matching is done using the Hungarian assignment algorithm.
+    %
+    %   linkResult = tracking.linkSegmentedObjects(segmentationResult1, segmentationResult2, trackingParameters);
+    %
+    %   Inputs:
+    %       segmentationResult1 (1,1) segmentation.Result - A segmentation.Result object containing the segmentation result for a particular frame.
+    %       segmentationResult2 (1,1) segmentation.Result - A segmentation.Result object containing the segmentation result for the consecutive frame.
+    %       trackingParameters (1,1) tracking.Parameters - A tracking.Parameters object containing the parameters for the tracking algorithm.
+    %
+    %   Outputs:
+    %       linkResult: A tracking.LinkResult object containing the label assignment as well as those labels that were not assigned.
     arguments
-        segmentationResult1 segmentation.Result
-        segmentationResult2 segmentation.Result
-        trackingParameters tracking.Parameters
+        segmentationResult1 (1,1) segmentation.Result
+        segmentationResult2 (1,1) segmentation.Result
+        trackingParameters (1,1) tracking.Parameters
     end
-    centroids1 = segmentationResult1.segmentationCentroids;
-    centroids2 = segmentationResult2.segmentationCentroids;
-    predictions = horzcat(centroids1.XCentroid, centroids1.YCentroid);
-    detections = horzcat(centroids2.XCentroid, centroids2.YCentroid);
-    % Calculate the cost matrix
-    cost = zeros(size(predictions, 1), size(detections, 1));
-    for i = 1:size(predictions, 1)
-        diff = detections - repmat(predictions(i,:), [size(detections, 1), 1]);
-        cost(i,:) = sqrt(sum(diff .^ 2, 2));
-    end
+    predictions = vertcat(segmentationResult1.regionProperties.Centroid);
+    detections = vertcat(segmentationResult2.regionProperties.Centroid);
+    % Calculate the cost matrix (euclidean distance)
+    cost = pdist2(predictions, detections);
     % Threshold the cost matrix to avoid linking detections that are too far away
     cost(cost > trackingParameters.maxCost) = Inf;
     % Link results using the Hungarian assignment algorithm (see https://www.mathworks.com/help/vision/ref/assigndetectionstotracks.html#d126e215950)

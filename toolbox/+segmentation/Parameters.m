@@ -1,7 +1,7 @@
 classdef Parameters
     %   Parameters Segmentation parameters for droplet detection spanning from image pre-processing to label filtering
     % 
-    %   Constructor syntax:
+    %   Constructor:
     %       % Default values
     %       segmentationParameters = segmentation.Parameters()
     %       % Custom values for resolution, minDropletRadius and maxDropletRadius
@@ -10,7 +10,7 @@ classdef Parameters
     %       segmentationParameters = segmentation.Parameters()
     %       segmentationParameters.maxEccentricity = 0.8;
     %
-    %   Parameters properties:
+    %   Properties:
     %       resolution - Resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
     %       illuminationCorrectionFilterSize - Size of the Gaussian filter used for illumination correction.
     %       gaussianFilterSizeLarge - Size of the large Gaussian filter used for border enhancement.

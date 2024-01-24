@@ -1,5 +1,11 @@
 classdef Droplet < handle
-    % TODO: Add description
+    %   Droplet Class for storing information about tracked droplets
+    %
+    %   Constructor:
+    %       tracking.Droplet(id, segmentationLabels)
+    %
+    %   Methods:
+    %       
     properties
         id (1,1) 
         segmentationLabels (1,:) 
@@ -7,7 +13,11 @@ classdef Droplet < handle
 
     methods
         function obj = Droplet(id, segmentationLabels)
-            % TODO: Add description
+            %   Creates a Droplet object
+            %
+            %   Inputs:
+            %       id (1,1) positive integer - Droplet's id
+            %       segmentationLabels (1,:) array - Droplet's segmentation labels for each frame
             arguments
                 id (1,1) {mustBeInteger, mustBePositive}
                 segmentationLabels (1,:) 
@@ -15,16 +25,5 @@ classdef Droplet < handle
             obj.id = id;
             obj.segmentationLabels = segmentationLabels;
         end
-
-        function setAvgChannelValue(obj, channel)
-            % TODO: Implement
-            % Creates an attribute with the chosen channel's average value
-        end
-
-        function setStdChannelValue(obj, channel)
-            % TODO: Implement
-            % Creates an attribute with the chosen channel's standard deviation value
-        end
     end
-
 end

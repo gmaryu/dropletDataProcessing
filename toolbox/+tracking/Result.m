@@ -1,13 +1,30 @@
 classdef Result < handle
-    % TODO: Add description
+    %   Result Tracking result for storing droplet and segmentation link results
+    %
+    %   Constructor:
+    %       trackingResult = tracking.Result(linkResultArray, dropletArray);
+    %
+    %   Properties:
+    %       linkResultArray (1,:) tracking.LinkResult - Array of results linking segmented frames together
+    %       dropletArray (1,:) tracking.Droplet - Array of tracked droplets.
     properties
-        linkResultArray (1,:) tracking.LinkResult % Array of link results
-        dropletArray (1,:) tracking.Droplet % Array of tracked droplets
+        % Array containing the results of linking segmented frames together
+        linkResultArray (1,:) tracking.LinkResult
+        % Array containing the tracked droplets
+        dropletArray (1,:) tracking.Droplet
     end
 
     methods
         function obj = Result(linkResultArray, dropletArray)
-            % TODO: Add description
+            %   Creates a new Result object
+            %
+            %   Inputs:
+            %       linkResultArray (1,:) tracking.LinkResult - Array of results linking segmented frames together
+            %       dropletArray (1,:) tracking.Droplet - Array of tracked droplets.
+            arguments
+                linkResultArray (1,:) tracking.LinkResult
+                dropletArray (1,:) tracking.Droplet
+            end
             obj.linkResultArray = linkResultArray;
             obj.dropletArray = dropletArray;
         end
