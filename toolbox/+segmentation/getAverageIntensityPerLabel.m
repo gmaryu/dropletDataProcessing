@@ -14,5 +14,6 @@ function averageIntensityPerLabel = getAverageIntensityPerLabel(image, labeledIm
         labeledImage (:,:) {mustBeNumeric}
     end
     props = regionprops(labeledImage, image, 'MeanIntensity');
-    averageIntensityPerLabel = [cat(1, props.MeanIntensity); cat(1, props.Label)]';
+    labels = 1:length(props);
+    averageIntensityPerLabel = [cat(1, props.MeanIntensity); labels'];
 end

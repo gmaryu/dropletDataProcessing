@@ -47,7 +47,7 @@ classdef MicroscopePosition < handle
         % Segmentation result for each frame
         segmentationResultArray (1,:) segmentation.Result 
         % Parameters used for tracking
-        trackingParameters (1,1) tracking.Parameters
+        % trackingParameters (1,1) tracking.Parameters
     end
 
     methods
@@ -127,6 +127,12 @@ classdef MicroscopePosition < handle
                 pathToFile = obj.getPathToFile('BF', frame);
                 image = imread(pathToFile);
                 segmentationResult = segmentation.segmentBrightFieldImage(image, segmentationParameters);
+                % Add data for channels of interest
+                for channel = obj.channels
+                    pathToFile = obj.getPathToFile(channel, frame);
+                    image = imread(pathToFile);
+                    segmentationResult.addAverageChannelIntensity(image, channel);
+                end
                 allSegmentationResults(frame) = segmentationResult;
             end
             obj.segmentationResultArray = allSegmentationResults;

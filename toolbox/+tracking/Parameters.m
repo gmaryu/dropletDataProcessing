@@ -3,9 +3,9 @@ classdef Parameters
     %
     %   Constructor syntax:
     %       % Default values
-    %       trackingParameters = tracking.Parameters();
+    %       trackingParameters = tracking.Parameters(minTrackLength, mustStartOnFirstFrame);
     %       % Custom values
-    %       trackingParameters = tracking.Parameters(maxCost, costOfNonAssignment, minTrackLength, mustStartOnFirstFrame);
+    %       trackingParameters = tracking.Parameters(minTrackLength, mustStartOnFirstFrame, maxCost, costOfNonAssignment);
     %
     %   Properties:
     %       maxCost - Maximum cost for linking two segments. Values higher than this in the cost matrix will be set to Inf.
@@ -13,30 +13,32 @@ classdef Parameters
     %       minTrackLength - Minimum length of a track (in number of frames). Tracks shorter than this will be discarded.
     %       mustStartOnFirstFrame - If true, only tracks that start on the first frame will be kept.
     properties
+        % Minimum length of a track (in number of frames). Tracks shorter than this will be discarded.
+        minTrackLength; % createDropletTracks
+        % If true, only tracks that start on the first frame will be kept.
+        mustStartOnFirstFrame; % createDropletTracks
         % Max cost for linking two segments. Values higher than this in the cost matrix will be set to Inf.
         maxCost = 100; % linkSegmentationResults
         % Cost of not linking a segment to any other segment.
         costOfNonAssignment = 100; % linkSegmentationResults
-        % Minimum length of a track (in number of frames). Tracks shorter than this will be discarded.
-        minTrackLength = 3; % createDropletTracks
-        % If true, only tracks that start on the first frame will be kept.
-        mustStartOnFirstFrame = false; % createDropletTracks
     end
 
     methods
-        function obj = Parameters(maxCost, costOfNonAssignment, minTrackLength, mustStartOnFirstFrame)
+        function obj = Parameters(minTrackLength, mustStartOnFirstFrame, maxCost, costOfNonAssignment)
             %   Create a Parameters object. If no arguments are given, the default values are used.
+            %
+            %   Required Inputs:
+            %       minTrackLength (1,1) integer - Minimum length of a track (in number of frames). Tracks shorter than this will be discarded.
+            %       mustStartOnFirstFrame (1,1) logical - If true, only tracks that start on the first frame will be kept.
             %
             %   Optional Inputs:
             %       maxCost (1,1) double = 100 - Maximum cost for linking two segments. Values higher than this in the cost matrix will be set to Inf.
             %       costOfNonAssignment (1,1) double = 100 - Cost of not linking a segment to any other segment.
-            %       minTrackLength (1,1) integer = 3 - Minimum length of a track (in number of frames). Tracks shorter than this will be discarded.
-            %       mustStartOnFirstFrame (1,1) logical = false - If true, only tracks that start on the first frame will be kept.
             arguments
+                minTrackLength (1,1) {mustBeInteger}
+                mustStartOnFirstFrame (1,1) logical
                 maxCost (1,1) double = 100
                 costOfNonAssignment (1,1) double = 100
-                minTrackLength (1,1) {mustBeInteger} = 3
-                mustStartOnFirstFrame (1,1) logical = false
             end
             obj.maxCost = maxCost;
             obj.costOfNonAssignment = costOfNonAssignment;

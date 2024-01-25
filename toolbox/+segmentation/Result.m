@@ -73,5 +73,26 @@ classdef Result < handle
             imshow(overlay);
             shg;
         end
+
+        function addAverageChannelIntensity(obj, image, channelName)
+            %  addAverageChannelIntensity Updates the region properties with the average intensity for each label of the provided image
+            %
+            %   Inputs:
+            %       image (:,:) {mustBeNumeric} - The image for which the average intensity should be calculated. Should be the same size as the labeled image
+            %       channelName string - The name of the channel for which the average intensity should be calculated
+            %
+            %   Ouput:
+            %       obj.regionProperties - The updated region properties
+            arguments
+                obj segmentation.Result
+                image (:,:) {mustBeNumeric}
+                channelName string
+            end
+            averageIntensityPerLabel = segmentation.getAverageIntensityPerLabel(image, obj.labeledImage);
+            for i = 1:length(obj.regionProperties)
+                obj.regionProperties(i).(channelName) = averageIntensityPerLabel(i);
+            end
+
+        end
     end
 end
