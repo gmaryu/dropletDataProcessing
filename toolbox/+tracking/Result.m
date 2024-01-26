@@ -22,8 +22,8 @@ classdef Result < handle
             %       linkResultArray (1,:) tracking.LinkResult - Array of results linking segmented frames together
             %       dropletArray (1,:) tracking.Droplet - Array of tracked droplets.
             arguments
-                linkResultArray (1,:) tracking.LinkResult
-                dropletArray (1,:) tracking.Droplet
+                linkResultArray (1,:) tracking.LinkResult = tracking.LinkResult.empty
+                dropletArray (1,:) tracking.Droplet = tracking.Droplet.empty
             end
             obj.linkResultArray = linkResultArray;
             obj.dropletArray = dropletArray;

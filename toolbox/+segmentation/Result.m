@@ -20,8 +20,8 @@ classdef Result < handle
             %       labeledImage - A labeled image where each pixel is assigned a label
             %       regionProperties - A struct array containing the properties of each region
             arguments
-                labeledImage (:,:) {mustBeNumeric};
-                regionProperties (:,:) struct;
+                labeledImage (:,:) {mustBeNumeric} = zeros(0,0);
+                regionProperties (:,:) struct = struct();
             end
             obj.labeledImage = labeledImage;
             obj.regionProperties = regionProperties;

@@ -16,6 +16,11 @@ classdef LinkResult
             %       assigned - Nx2 matrix of indices connecting labels in one segmentation result to labels in another segmentation result
             %       unassignedFromFirstInput - Nx1 vector of labels in the first segmentation result that were not connected to any labels in the second segmentation result
             %       unassignedFromSecondInput - Nx1 vector of labels in the second segmentation result that were not connected to any labels in the first segmentation result
+            arguments
+                assigned (:,2) {mustBeInteger, mustBeNonnegative} = [];
+                unassignedFromFirstInput (:,1) {mustBeInteger, mustBeNonnegative} = [];
+                unassignedFromSecondInput (:,1) {mustBeInteger, mustBeNonnegative} = [];
+            end
             obj.assigned = assigned;
             obj.unassignedFromFirstInput = unassignedFromFirstInput;
             obj.unassignedFromSecondInput = unassignedFromSecondInput;

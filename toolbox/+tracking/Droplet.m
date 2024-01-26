@@ -19,8 +19,8 @@ classdef Droplet < handle
             %       id (1,1) positive integer - Droplet's id
             %       segmentationLabels (1,:) array - Droplet's segmentation labels for each frame
             arguments
-                id (1,1) {mustBeInteger, mustBePositive}
-                segmentationLabels (1,:) 
+                id (1,1) {mustBeInteger, mustBePositive} = 1;
+                segmentationLabels (1,:) = [];
             end
             obj.id = id;
             obj.segmentationLabels = segmentationLabels;

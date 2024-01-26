@@ -27,7 +27,7 @@ classdef MicroscopePosition < handle
         % Unique identifier for this microscope position
         id (1,1) {mustBeInteger} 
         % List of channels of interest
-        channels (1,:) string 
+        channels (1,:) string
         % Microscope resolution relative to 1x1 binning with 4x objective. Use 1 for 1x1 binning, 0.5 for 2x2 binning, etc.
         resolution (1,1) double
         % Total number of frames
@@ -47,7 +47,13 @@ classdef MicroscopePosition < handle
         % Segmentation result for each frame
         segmentationResultArray (1,:) segmentation.Result 
         % Parameters used for tracking
-        % trackingParameters (1,1) tracking.Parameters
+        trackingParameters (1,1) tracking.Parameters
+        % Tracking result for this microscope position
+        trackingResult (1,1) tracking.Result
+        % Result table with information about each droplet
+        resultTable cell
+        % Whether to calculat FRET ratio or not
+        calculateRatio (1,1) logical = true
     end
 
     methods
@@ -127,7 +133,6 @@ classdef MicroscopePosition < handle
                 pathToFile = obj.getPathToFile('BF', frame);
                 image = imread(pathToFile);
                 segmentationResult = segmentation.segmentBrightFieldImage(image, segmentationParameters);
-                % Add data for channels of interest
                 for channel = obj.channels
                     pathToFile = obj.getPathToFile(channel, frame);
                     image = imread(pathToFile);
@@ -159,8 +164,14 @@ classdef MicroscopePosition < handle
         end
         
         function track(obj, trackingParameters)
-            % TODO: Implement
-            %{
+            %  track Performs tracking on all frames in the microscope position
+            %
+            %   Inputs:
+            %    trackingParameters tracking.Parameters % Parameters used for tracking
+            %
+            %   Notes:
+            %    - This function will display a progress bar
+            %    - The segmentation result must be set before calling this function
             arguments
                 obj MicroscopePosition
                 trackingParameters tracking.Parameters
@@ -170,30 +181,23 @@ classdef MicroscopePosition < handle
                 error('Segmentation has not been performed for this microscope position. Please run segment() first.')
             end
             obj.trackingParameters = trackingParameters;
+            obj.trackingResult = tracking.trackDroplets(obj.segmentationResultArray, trackingParameters);
+        end
 
-            linkResultArray = tracking.LinkResult.empty(obj.totalFrames-1, 0);
-            % Link segmentation results
-            fig = uifigure;
-            set(fig, 'Visible', 'on');
-            d = uiprogressdlg(fig,'Title','Please Wait',...
-                              'Message','Opening the application');
-            for frame = 1:obj.totalFrames-1
-                d.Value = frame/obj.totalFrames;
-                d.Message = sprintf('Tracking frame %d/%d...', frame, obj.totalFrames);
-                segmentationResult1 = obj.segmentationResultArray(frame);
-                segmentationResult2 = obj.segmentationResultArray(frame+1);
-                linkResult = tracking.linkSegmentedObjects(segmentationResult1, ...
-                                                           segmentationResult2, ...
-                                                           trackingParameters);
-                linkResultArray(frame) = linkResult;
+        function createResultTable(obj)
+            %   createResultTable Creates a table of results for this microscope position
+            %
+            %   Notes:
+            %    - The tracking result must be set before calling this function
+            arguments
+                obj MicroscopePosition
             end
-            close(fig);
-            dropletArray = tracking.createDropletArray(linkResultArray, ...
-                                                       trackingParameters);
-
-            obj.trackingResult = tracking.Result(linkResultArray, dropletArray);
-            %}
-            obj.trackingParameters = trackingParameters;
+            % Check that tracking has been performed
+            if isempty(obj.trackingResult)
+                error('Tracking has not been performed for this microscope position. Please run track() first.')
+            end
+            obj.resultTable = tracking.createResultTable(obj.segmentationResultArray, obj.trackingResult, ...
+                                                         obj.channels, obj.timeDelta, obj.calculateRatio);
         end
     end
 end
