@@ -1,0 +1,125 @@
+function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
+% cropBrightChunk Segments nuclei from a series of bright field images.
+%
+%   [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
+%
+% This function reads a set of TIFF images specified by the file pattern in 'files', applies a 
+% Gaussian filter and outlier detection to identify the nucleus, fits a two‐dimensional Gaussian 
+% model, and produces a binary mask of the nucleus. It returns the nuclear area for each frame 
+% and a mapping from image index to frame number. Results are saved to the specified output file.
+%
+% Inputs:
+%   files  - (1,1) string. File pattern for the images, e.g., "Pos6_RFP-T_???.tif".
+%   output - (1,1) string. Output .mat filename to save the results.
+%
+% Outputs:
+%   nuclearArea - 1×N vector of nuclear area (in pixels) for each frame.
+%   idxToFrame  - 1×N vector mapping each image to its frame index.
+%
+% Example:
+%   [area, idxFrame] = postprocessing.cropBrightChunk("test/droplet_000/Pos6_RFP-T_???.tif", "Pos6_000.mat");
+    
+    arguments
+        files (1,1) string
+        output (1,1) string
+    end
+
+    debug = false;
+    radiusMargin = 0.05;
+    gfilterPixels = 1;
+    outlierThresFactor = 2.5;
+    refQuantileLower = 0.25;
+    refQuantileUpper = 0.5;
+    outlierThres = 0.01;
+    smallCcThres = 0.0005;
+    gfitMaxStdFactor = 10;
+    intensityThresFactor = 2.5;
+    
+    fs = dir(files);
+    N = length(fs);
+    if N == 0
+        error("No files found matching pattern: %s", files);
+    end
+    root = fs(1).folder;
+    rawImages = cell(1, N);
+    for i = 1:N
+        rawImages{i} = imread(fullfile(root, fs(i).name));
+        if i == 1
+            nPixels = size(rawImages{1}, 1);
+            [xx, yy] = meshgrid(1:nPixels, 1:nPixels);
+            radius = nPixels / 2 / (1 + radiusMargin);
+            mask = uint16(hypot(xx - (nPixels+1)/2, yy - (nPixels+1)/2) < radius);
+            nanmask = double(mask);
+            nanmask(nanmask==0) = NaN;
+        end
+    end
+    
+    try
+        rawImagesCat = cat(3, rawImages{:});
+    catch
+        nuclearArea = [];
+        idxToFrame = [];
+        return;
+    end
+    
+    maskedImages = uint16(mask) .* rawImagesCat;
+    nuclearMask = double(maskedImages);
+    
+    %% Process each frame to segment nucleus.
+    for i = 1:N
+        currentImage = double(maskedImages(:,:,i));
+        gfilt = imgaussfilt(currentImage .* nanmask, gfilterPixels);
+        [mint, idx] = max(gfilt, [], "all", "linear");
+        [ix, iy] = ind2sub(size(gfilt), idx);
+        ref = median(gfilt(gfilt > quantile(gfilt(:), refQuantileLower) & gfilt < quantile(gfilt(:), refQuantileUpper)));
+        t_val = outlierThresFactor * -1/(sqrt(2)*erfcinv(3/2)) * median(abs(gfilt(:)-ref), "omitnan");
+        outliers = imgaussfilt(double(gfilt - ref > t_val), gfilterPixels);
+        
+        if outliers(ix, iy) > outlierThres
+            [my, mx] = meshgrid(1:size(mask,1), 1:size(mask,2));
+            idx_fit = ~isnan(gfilt);
+            g2d_residuals = @(p, x, y, z) p(1)*exp(-((x-ix).^2+(y-iy).^2)/p(2)) + p(3) - z;
+            opts = optimset('Display','off');
+            initialGuess = [mint - mean(gfilt(:), 'omitnan'), 1, mean(gfilt(:), 'omitnan')];
+            lb = [0, 0, 0];
+            ub = [inf, (size(gfilt,1)/gfitMaxStdFactor)^2, inf];
+            gfit = lsqnonlin(@(p) g2d_residuals(p, mx(idx_fit), my(idx_fit), gfilt(idx_fit)), initialGuess, lb, ub, opts);
+            mask_cyto = gfit(1)*exp(-((mx-ix).^2+(my-iy).^2)/gfit(2)) + gfit(3) < gfit(1)*exp(-3) + gfit(3);
+            masked_cyto_images = gfilt .* double(mask_cyto);
+            masked_cyto_images(masked_cyto_images == 0) = NaN;
+            mu_val = mean(masked_cyto_images(:), 'omitnan');
+            sigma_val = std(masked_cyto_images(:), 'omitnan');
+            standardized = double(mask) .* ((gfilt - mu_val) / sigma_val);
+            nuclearMask(:,:,i) = bwareaopen(standardized > intensityThresFactor, floor(nPixels^2 * smallCcThres));
+        else
+            nuclearMask(:,:,i) = 0;
+        end
+    end
+    
+    nuclearArea = sum(reshape(nuclearMask, nPixels*nPixels, N), 1);
+    
+    %% (Optional) Save overlay images.
+    for i = 1:N
+        overlay = imoverlay(rawImagesCat(:,:,i), bwperim(nuclearMask(:,:,i)), [0, 1, 0]);
+        name = strrep(fs(i).name, ".tif", "_segmented_new.tif");
+        % Uncomment the line below to save overlay images.
+        % imwrite(overlay, fullfile(root, name));
+    end
+    
+    %% Determine frame indices from file names.
+    [~, basename, ext] = fileparts(files);
+    nameref = convertStringsToChars(basename + ext);
+    idxToFrame = zeros(1,N);
+    for i = 1:N
+        currentName = fs(i).name;
+        idx = "";
+        for j = 1:strlength(currentName)
+            if nameref(j)=='?'
+                idx = idx + currentName(j);
+            end
+        end
+        idxToFrame(i) = str2double(idx);
+    end
+    
+    save(output, "nuclearMask", "nuclearArea", "idxToFrame", "fs");
+end

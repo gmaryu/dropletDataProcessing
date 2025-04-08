@@ -17,5 +17,8 @@ function preProcessed = preProcessBrightFieldImage(brightFieldImage, segmentatio
     corrected = double(corrected);
     imgMin = min(corrected(:));
     imgMax = max(corrected(:));
+    if imgMax - imgMin == 0
+        error('all pixels have the same value. ');
+    end
     preProcessed = (corrected - imgMin) / (imgMax - imgMin);
 end
