@@ -33,17 +33,12 @@ arguments
     overwriteDNAInfo logical
 end
 
-
+% Process only subdirectories (skip '.' and '..')
 subdirs = dir(db.croppedImages);
 subdirs = subdirs([subdirs(:).isdir]);
-% Process only subdirectories (skip '.' and '..')
 subdirs = subdirs(~ismember({subdirs(:).name},{'.','..'}));
 
 for j = 1:length(subdirs)
-    % Process only subdirectories (skip '.' and '..')
-    % if ~subdirs(j).isdir || any(strcmp(subdirs(j).name, {'.', '..'}))
-    %     continue;
-    % end
 
     % Construct the file patterns for nuclear and DNA images.
     nuclearImages = fullfile(db.croppedImages, subdirs(j).name, ...
@@ -68,6 +63,7 @@ for j = 1:length(subdirs)
             fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
             continue;
         end
+    
     end
 
     % Process DNA (Hoechst) intensity if requested.
@@ -80,7 +76,9 @@ for j = 1:length(subdirs)
             fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
             continue;
         end
-    end
+    else
 end
+
+
 
 end

@@ -3,6 +3,7 @@ function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, i
     mergedInfo = table();
     mergedTimeSeries = table();
     mergedCycle = table();
+    mergednoOsci = table();
     
     for i = 1:length(database)
         db = database{i};
@@ -11,6 +12,7 @@ function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, i
             mergedInfo = [mergedInfo; posInfo];
             mergedTimeSeries = [mergedTimeSeries; [array2table(db.posId * ones(height(db.timeSeries),1), 'VariableNames', {'POS_ID'}), db.timeSeries]];
             mergedCycle = [mergedCycle; [array2table(db.posId * ones(height(db.cycle),1), 'VariableNames', {'POS_ID'}), db.cycle]];
+            mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
         end
     end
     
@@ -20,4 +22,5 @@ function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, i
     data.FrameToMin = frameToMin;
     data.PixelToUm = pixelToUm;
     data.InitialPeakTimeBound = initialPeakTimeBound;
+    data.noOscillation = mergednoOsci;
 end

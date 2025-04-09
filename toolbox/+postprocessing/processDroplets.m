@@ -1,5 +1,5 @@
 function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMate, trackPeaks, spermRef, posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
-                                                                 spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset)
+                                                                 spermCondition, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
     % Initialize output containers.
     timeSeriesData = table();
     cycleData = table();
@@ -32,14 +32,18 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
             fprintf(" - short tracking frames\n");
             continue;
         end
+
+        % Check if the droplet oscillation starts too late.
+        if tp.START_FRAME(1) * frameToMin > initialPeakTimeBound
+            fprintf(" - Ignored. Very late oscillation.\n");
+            continue;
+        end
         
         % If spermCondition true, perform nuclear quantification.
         if spermCondition
-            % Use your existing nuclearQuantification routine.
-            % This could also be split further if desired.
             try
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
-                nuclearData = postprocessing.getNuclearData(db.croppedImages, posId, dropletID, nucChannel, dnaChannel, hoechstoffset);
+                nuclearData = postprocessing.getNuclearData(db.croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset);
                 % Append the obtained data to the tracking table.
                 tm.NPIXEL_NUC = nuclearData.nuclearArea';
                 tm.NPIXEL_DNA = nuclearData.hoechstNPixels';
@@ -52,12 +56,7 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
         else
             fprintf(" - cytoplasm only -");
         end
-        
-        % Check if the droplet oscillation starts too late.
-        if tp.START_FRAME(1) * frameToMin > initialPeakTimeBound
-            fprintf(" - Ignored. Very late oscillation.\n");
-            continue;
-        end
+
         
         % Process cycle data for current droplet.
         [tp_updated, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);

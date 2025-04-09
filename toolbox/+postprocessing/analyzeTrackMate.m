@@ -33,6 +33,8 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
         forceIgnore table
     end
 
+    debug = false;
+
     trackMateFile = db.trackMateSpotsCsv;
     target_position = db.posId;
     
@@ -47,7 +49,9 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     trackNoPeaks = table();
     
     for i = 1:length(ids)
-        fprintf("%d", ids(i));
+        if debug
+            fprintf("%d", ids(i));
+        end
         track = sortrows(trackMate(trackMate.TRACK_ID == ids(i), :), "FRAME");
         
         % Filter tracks with abnormal area variations.
@@ -57,7 +61,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
             origLen = height(track);
             track = track(validIdx, :);
             if height(track) < 0.8 * origLen
-                fprintf(" - Area anomaly (%.3f, %.3f, %d)\n", median(areaAnomaly), std(areaAnomaly), sum(areaAnomaly > 0.1));
+                fprintf("ID:%d - Area anomaly (%.3f, %.3f, %d)\n", ids(i), median(areaAnomaly), std(areaAnomaly), sum(areaAnomaly > 0.1));
                 continue;
             end
         end
@@ -68,12 +72,12 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
             try
                 pidx = findPeriodicPeaks(track.MAIN_SIGNAL, frameToMin);
             catch
-                fprintf(" - Invalid peaks\n");
+                fprintf("ID:%d - Invalid peaks\n", ids(i));
                 continue;
             end
             
             if isempty(pidx) || all(isnan(pidx(:)))
-                fprintf(" - No peaks\n");
+                fprintf("ID:%d  - No peaks\n", ids(i));
                 trackNoPeaks = [trackNoPeaks; track];
                 continue;
             end
@@ -84,9 +88,9 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
                                  'VariableNames', {'TRACK_ID','CYCLE_ID'});
             trackPeaks = [trackPeaks; [labels, tpoints]];
             cnt = cnt + 1;
-            fprintf("\n");
+            %fprintf("\n");
         else
-            fprintf(" - found in force_ignored \n");
+            fprintf("ID:%d - found in force_ignored \n", ids(i));
         end
     end
     fprintf("%d / %d droplets with valid signals\n", cnt, length(ids));

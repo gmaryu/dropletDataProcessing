@@ -1,4 +1,4 @@
-function nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, hoechstoffset)
+function nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
 %   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, hoechstoffset)
@@ -30,6 +30,7 @@ function nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChanne
         dropletID (1,1) double
         nucChannel (1,1) string
         dnaChannel (1,1) string
+        automaticSpermCount logical
         hoechstoffset logical
     end
 
