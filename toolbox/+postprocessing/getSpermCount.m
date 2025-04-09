@@ -20,7 +20,7 @@ function spermCount = getSpermCount(spermRef, dropletID)
 
     row = spermRef(spermRef.DropID == dropletID, :);
     if isempty(row)
-        spermCount = nan;
+        spermCount = [];
     else
         spermCount = row.Count;
     end

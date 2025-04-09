@@ -76,7 +76,7 @@ for j = 1:length(subdirs)
             fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
             continue;
         end
-    else
+    end
 end
 
 

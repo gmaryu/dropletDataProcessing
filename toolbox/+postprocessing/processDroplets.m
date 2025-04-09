@@ -29,7 +29,7 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
         
         % Skip droplet if flagged in the force ignore list.
         if ismember(dropletID, ignoredDroplets)
-            fprintf(" - short tracking frames\n");
+            fprintf(" - Already Ignored\n");
             continue;
         end
 
@@ -39,15 +39,15 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
             continue;
         end
         
+                
+        % Process cycle data for current droplet.
+        [tp_updated, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
+
         % If spermCondition true, perform nuclear quantification.
         if spermCondition
             try
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
-                nuclearData = postprocessing.getNuclearData(db.croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset);
-                % Append the obtained data to the tracking table.
-                tm.NPIXEL_NUC = nuclearData.nuclearArea';
-                tm.NPIXEL_DNA = nuclearData.hoechstNPixels';
-                tm.SUMINTENSITY_DNA = nuclearData.hoechstSum';
+                [tm, tp_updated, spermCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp_updated, spermCount, automaticSpermCount, hoechstoffset);
                 fprintf(" - Nuclear mask obtained");
             catch
                 fprintf(" - Ignored. .mat file not found.\n");
@@ -58,8 +58,7 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
         end
 
         
-        % Process cycle data for current droplet.
-        [tp_updated, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
+
         
         % Gather processed data.
         timeSeriesData = [timeSeriesData; tm];
