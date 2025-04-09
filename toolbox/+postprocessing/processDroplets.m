@@ -54,6 +54,7 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
                 continue;
             end
         else
+            spermCount = NaN;
             fprintf(" - cytoplasm only -");
         end
 
