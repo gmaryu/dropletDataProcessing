@@ -49,12 +49,7 @@ function database = genDatabase(exportsPath)
             entry.trackMateTracksCsv = fullfile(exportsPath, sprintf('%s_segmented_tracks.csv', posName));
             entry.croppedImages      = fullfile(exportsPath, sprintf('cropped_%s', posName));
             entry.spermCountCsv      = fullfile(exportsPath, sprintf('spermcount_%s.csv', posName));
-            
-            % Include force_ignore.csv if it exists.
-            forceIgnorePath = fullfile(exportsPath, 'force_ignore.csv');
-            if exist(forceIgnorePath, 'file') == 2
-                entry.forceIgnoreCsv = forceIgnorePath;
-            end
+            entry.forceIgnoreCsv     = fullfile(exportsPath, 'force_ignore.csv');
 
             database{i} = entry;
         else

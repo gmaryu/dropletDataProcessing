@@ -72,7 +72,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
                 continue;
             end
             
-            if isnan(pidx) || isempty(pidx)
+            if isempty(pidx) || all(isnan(pidx(:)))
                 fprintf(" - No peaks\n");
                 trackNoPeaks = [trackNoPeaks; track];
                 continue;
