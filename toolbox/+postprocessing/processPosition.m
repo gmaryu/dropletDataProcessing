@@ -10,12 +10,17 @@ function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, f
         writetable(spc_table, db.spermCountCsv);
     end
     spermRef = readtable(db.spermCountCsv);
-    
-    % Process droplet-level data.
-    [timeSeriesData, cycleData, dropletInfo] = postprocessing.processDroplets(trackMate, trackPeaks, spermRef, db.posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset);
-    
-    % Save results into the database.
-    db.info = [array2table(db.posId * ones(height(dropletInfo),1), 'VariableNames', {'POS_ID'}), dropletInfo];
-    db.timeSeries = timeSeriesData;
-    db.cycle = cycleData;
+    if ~isempty(trackPeaks)
+        % Process droplet-level data.
+        [timeSeriesData, cycleData, dropletInfo] = postprocessing.processDroplets(trackMate, trackPeaks, spermRef, db.posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset);
+
+        % Save results into the database.
+        db.info = [array2table(db.posId * ones(height(dropletInfo),1), 'VariableNames', {'POS_ID'}), dropletInfo];
+        db.timeSeries = timeSeriesData;
+        db.cycle = cycleData;
+    else
+        db.info = [];
+        db.timeSeries = [];
+        db.cycle = [];
+    end
 end
