@@ -1,61 +1,86 @@
-function nuclearQuantification(database, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
-% nuclearQuantification Processes nuclear segmentation and DNA intensity quantification.
+function nuclearQuantification(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
+% nuclearQuantification  Process nuclear segmentation and DNA intensity quantification.
 %
 %   nuclearQuantification(database, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
 %
-% This function loops through each database entry’s cropped images folder and, for each droplet 
-% (i.e. each subdirectory), constructs file names for the corresponding nuclear and DNA images.
-% If the overwrite flags are true, it calls cropBrightChunk and sumHoechstIntwNucMask to generate 
-% the .mat files used for subsequent quantification.
+% This function iterates over each entry in the given database (a cell array of
+% structures). For each droplet (each subdirectory within the croppedImages folder),
+% the function constructs file patterns for the nuclear and DNA images based on the specified
+% channels. If the corresponding mask files are to be updated (based on the overwrite flags), it calls
+% the segmentation routines cropBrightChunk and sumHoechstIntwNucMask to generate the .mat files.
 %
 % Inputs:
-%   database         - Cell array of database structures.
-%   nucChannel       - String indicating the nuclear channel name.
-%   dnaChannel       - String indicating the DNA channel name.
-%   overwriteNucMask - Logical; if true, the nuclear mask will be recalculated.
-%   overwriteDNAInfo - Logical; if true, DNA quantification is recalculated.
+%   database         - Cell array of database structures. Each structure should include at least:
+%                        .posId: numeric identifier for the position.
+%                        .croppedImages: path to the folder containing cropped droplet images.
+%   nucChannel       - (1,1) string specifying the nuclear channel (e.g., "CFP").
+%   dnaChannel       - (1,1) string specifying the DNA (Hoechst) channel (e.g., "DAPI").
+%   overwriteNucMask - Logical flag; if true, the nuclear segmentation (mask) is recalculated.
+%   overwriteDNAInfo - Logical flag; if true, the DNA intensity quantification is recalculated.
 %
 % Example:
 %   postprocessing.nuclearQuantification(database, "CFP", "DAPI", true, true);
-    
-    arguments
-        database {iscell(database)}
-        nucChannel (1,1) string
-        dnaChannel (1,1) string
-        overwriteNucMask logical
-        overwriteDNAInfo logical
-    end
+%
+% Note: This function assumes that the naming convention for the droplet directories
+%   is such that the folder name includes "droplet" and that the nuclear and DNA files
+%   are named by replacing "droplet" with "nuclear" or "dna", respectively.
 
-    for i = 1:length(database)
-        db = database{i};
-        subdirs = dir(db.croppedImages);
-        for j = 1:length(subdirs)
-            if ~subdirs(j).isdir || any(strcmp(subdirs(j).name, [".", ".."]))
-                continue;
-            end
-            % Build file patterns for nuclear and DNA images.
-            nuclearImages = sprintf("%s/%s/Pos%d_%s_???.tif", db.croppedImages, subdirs(j).name, db.posId, nucChannel);
-            spermImages   = sprintf("%s/%s/Pos%d_%s_???.tif", db.croppedImages, subdirs(j).name, db.posId, dnaChannel);
-            
-            nuclearMask = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "nuclear"));
-            spermMask   = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "dna"));
-            
-            if overwriteNucMask
-                fprintf(" - Processing %s of Pos %d\n", subdirs(j).name, db.posId);
-                try
-                    [nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, nuclearMask);
-                    fprintf(" - Nuclear mask obtained.\n");
-                catch ME
-                    fprintf(" - Ignored due to error: %s\n", ME.message);
-                    continue;
-                end
-            end
-            
-            if overwriteDNAInfo
-                fprintf(" - Processing %s for DNA quantification of Pos %d\n", subdirs(j).name, db.posId);
-                [~, ~, ~, ~, idxToFrameDNA] = postprocessing.sumHoechstIntwNucMask(spermImages, nuclearMask, spermMask);
-                fprintf(" - Hoechst intensity quantified.\n");
-            end
+arguments
+    db {iscell(db)}
+    nucChannel (1,1) string
+    dnaChannel (1,1) string
+    overwriteNucMask logical
+    overwriteDNAInfo logical
+end
+
+
+subdirs = dir(db.croppedImages);
+subdirs = subdirs([subdirs(:).isdir]);
+% Process only subdirectories (skip '.' and '..')
+subdirs = subdirs(~ismember({subdirs(:).name},{'.','..'}));
+
+for j = 1:length(subdirs)
+    % Process only subdirectories (skip '.' and '..')
+    % if ~subdirs(j).isdir || any(strcmp(subdirs(j).name, {'.', '..'}))
+    %     continue;
+    % end
+
+    % Construct the file patterns for nuclear and DNA images.
+    nuclearImages = fullfile(db.croppedImages, subdirs(j).name, ...
+        sprintf("Pos%d_%s_???.tif", db.posId, nucChannel));
+    dnaImages     = fullfile(db.croppedImages, subdirs(j).name, ...
+        sprintf("Pos%d_%s_???.tif", db.posId, dnaChannel));
+
+    % Construct the output file names for the segmentation results.
+    %nuclearMaskFile = fullfile(db.croppedImages, [strrep(subdirs(j).name, "droplet", "nuclear") '.mat']);
+    %dnaMaskFile     = fullfile(db.croppedImages, [strrep(subdirs(j).name, "droplet", "dna") '.mat']);
+    nuclearMaskFile = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "nuclear"));
+    dnaMaskFile = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "dna"));
+
+    % Process nuclear segmentation if requested.
+    if overwriteNucMask
+        fprintf("Processing nuclear mask for %s of Pos %d...\n", subdirs(j).name, db.posId);
+        try
+            % Call the cropping/segmentation routine.
+            [nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, nuclearMaskFile);
+            fprintf("Nuclear mask obtained.\n");
+        catch ME
+            fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
+            continue;
         end
     end
+
+    % Process DNA (Hoechst) intensity if requested.
+    if overwriteDNAInfo
+        fprintf("Processing DNA quantification for %s of Pos %d...\n", subdirs(j).name, db.posId);
+        try
+            [hoechstSum, hoechstNPixels, ~, ~, idxToFrameDNA] = postprocessing.sumHoechstIntwNucMask(dnaImages, nuclearMaskFile, dnaMaskFile);
+            fprintf("DNA quantification completed.\n");
+        catch ME
+            fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
+            continue;
+        end
+    end
+end
+
 end

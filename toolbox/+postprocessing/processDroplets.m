@@ -1,4 +1,4 @@
-function [timeSeriesData, cycleData, dropletInfo] = processDroplets(trackMate, trackPeaks, spermRef, posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
+function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMate, trackPeaks, spermRef, posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
                                                                  spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset)
     % Initialize output containers.
     timeSeriesData = table();
@@ -39,11 +39,11 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(trackMate, t
             % This could also be split further if desired.
             try
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
-                nuclearData = postprocessing.getNuclearData(posId, dropletID, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
+                nuclearData = postprocessing.getNuclearData(db.croppedImages, posId, dropletID, nucChannel, dnaChannel, hoechstoffset);
                 % Append the obtained data to the tracking table.
-                tm.NPIXEL_NUC = nuclearData.nuclearArea;
-                tm.NPIXEL_DNA = nuclearData.hoechstNPixels;
-                tm.SUMINTENSITY_DNA = nuclearData.hoechstSum;
+                tm.NPIXEL_NUC = nuclearData.nuclearArea';
+                tm.NPIXEL_DNA = nuclearData.hoechstNPixels';
+                tm.SUMINTENSITY_DNA = nuclearData.hoechstSum';
                 fprintf(" - Nuclear mask obtained");
             catch
                 fprintf(" - Ignored. .mat file not found.\n");

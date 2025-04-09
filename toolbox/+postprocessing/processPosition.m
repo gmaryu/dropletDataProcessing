@@ -10,9 +10,17 @@ function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, f
         writetable(spc_table, db.spermCountCsv);
     end
     spermRef = readtable(db.spermCountCsv);
+
+    if spermCondition
+        % Here we call nuclearQuantification on just this position.
+        % Since nuclearQuantification accepts a cell array of database structures,
+        % we wrap 'db' in {}.
+        postprocessing.nuclearQuantification(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
+    end
+    
     if ~isempty(trackPeaks)
         % Process droplet-level data.
-        [timeSeriesData, cycleData, dropletInfo] = postprocessing.processDroplets(trackMate, trackPeaks, spermRef, db.posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset);
+        [timeSeriesData, cycleData, dropletInfo] = postprocessing.processDroplets(db, trackMate, trackPeaks, spermRef, db.posId, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, spermCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, automaticSpermCount, hoechstoffset);
 
         % Save results into the database.
         db.info = [array2table(db.posId * ones(height(dropletInfo),1), 'VariableNames', {'POS_ID'}), dropletInfo];
@@ -23,4 +31,5 @@ function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, f
         db.timeSeries = [];
         db.cycle = [];
     end
+    
 end
