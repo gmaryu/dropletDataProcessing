@@ -5,9 +5,11 @@ function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, f
     [trackMate, trackPeaks, trackNoPeaks] = postprocessing.analyzeTrackMate(db, FRETNumerator, FRETDenominator, frameToMin, forceIgnore);
     
     % Ensure sperm count file exists.
-    if spermCondition && ~isfile(db.spermCountCsv)
+    if ~isfile(db.spermCountCsv)
         spc_table = table([], [], 'VariableNames', {'DropID','Count'});
         writetable(spc_table, db.spermCountCsv);
+    else
+        spermRef = readtable(db.spermCountCsv);
     end
     spermRef = readtable(db.spermCountCsv);
 

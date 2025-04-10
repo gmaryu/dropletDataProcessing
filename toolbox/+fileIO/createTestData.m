@@ -17,7 +17,7 @@ function createTestData(srcFolder, destRoot, posVec, frameVec, colorSet)
     %   3. Copies the matching files into the corresponding position folder, keeping the original file names.
     %
     % Example:
-    %   createTestData("C:\Data\Original", "C:\Data\Test", [3,5], 1:150, {'4-BF', '5-CFP'});
+    %   createTestData("C:\Data\Original", "C:\Data\Test", [3,5], 1:150,);
     
         srcFolder = string(srcFolder);
         destRoot  = string(destRoot);

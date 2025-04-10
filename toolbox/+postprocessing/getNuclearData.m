@@ -77,7 +77,7 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
         if mn > 1
             spermCount = mn;
         else
-            if size(tp, 1) >= 3
+            if size(tp, 1) >= 3 % more than three peaks
                 if sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.0001) > size(tp, 1) - 2
                     
                     % single nuclear exists
@@ -108,42 +108,6 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
             end
         end
 
-    end
-    %{
-    if automaticSpermCount
-        
-        mn = 3;
-        
-        if mn > 1
-            spermCount(end) = mn;
-            %fprintf(" - Multiple nuclei detected\n");
-        else
-            
-            if size(tp, 1) >= 3
-                if sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.0001) > size(tp, 1) - 2
-                    % single nuclear exists
-                    if max(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.05 && max(power(tp.DNA_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.005
-                        % maximum n/c volume > 0.05 & maximum Hoechst volume > 0.005
-                        spermCount(end) = 1;
-                        fprintf(" - Single nucleus\n");
-                    else
-                        spermCount(end) = nan;
-                        fprintf(" - Fail type 1\n");
-                    end
-                elseif sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.001) < 2
-                    spermCount(end) = 0;
-                    fprintf(" - No nucleus\n");
-                else
-                    spermCount(end) = nan;
-                    fprintf(" - Fail type 2\n");
-                end
-            else
-                spermCount(end) = nan;
-                fprintf(" - Number of cycle too small\n");
-            end
-            
-    end
-    %}
-    
+    end    
 
 end
