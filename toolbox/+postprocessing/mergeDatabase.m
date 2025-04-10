@@ -11,8 +11,12 @@ function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, i
             %posInfo = array2table(db.posId * ones(height(db.info),1), 'VariableNames', {'POS_ID'});
             mergedInfo = [mergedInfo; db.info];
             mergedTimeSeries = [mergedTimeSeries; [array2table(db.posId * ones(height(db.timeSeries),1), 'VariableNames', {'POS_ID'}), db.timeSeries]];
-            mergedCycle = [mergedCycle; [array2table(db.posId * ones(height(db.cycle),1), 'VariableNames', {'POS_ID'}), db.cycle]];
-            mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
+            if ~isempty(db.cycle)
+                mergedCycle = [mergedCycle; [array2table(db.posId * ones(height(db.cycle),1), 'VariableNames', {'POS_ID'}), db.cycle]];
+            end
+            if ~isempty(db.noOcillation)
+                mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
+            end
         end
     end
     

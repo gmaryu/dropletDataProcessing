@@ -27,7 +27,14 @@ function retv = findPeriodicPeaks(signal, frameToMin)
         else
             retv = nan;
         end
-
+    elseif numel(ip) +1 == numel(it)
+        % disp('first peak is too close to 0');
+        % discard first trough
+        if all(it(2:end) - ip(1:end) > 0)
+            retv = [ip(1:end-1), ip(2:end), it(2:end-1)];
+        else
+            retv = nan;
+        end
     else
         retv = nan;
     end
