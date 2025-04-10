@@ -1,14 +1,14 @@
-function maskOverlay(numItems, numFrames, Position, FPChannel, maskDir, alphaValue)
+function maskOverlay(sample_ids, numFrames, Position, FPChannel, maskDir, alphaValue)
 % Loop over each item folder
-for iItem = 0:numItems
-    
+for i = 1:length(sample_ids)
+    iItem = sample_ids(i);
     % Construct the folder name (e.g. 'droplet_001')
     folderName = fullfile(maskDir, sprintf('droplet_%03d', iItem));
     % Construct GIF output file name
     gifName    = fullfile(maskDir, sprintf('overlay_%03d.gif', iItem));
     
     % --- 1) Attempt to load binaryMask from the .mat file ---
-    maskFilePath = sprintf('nuclear_%03d.mat', iItem);
+    maskFilePath = fullfile(maskDir,sprintf('nuclear_%03d.mat', iItem));
     hasMask      = false;  % default to no mask
     if exist(maskFilePath, 'file') == 2
         loadedData = load(maskFilePath);
