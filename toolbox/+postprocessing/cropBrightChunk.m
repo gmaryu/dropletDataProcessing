@@ -1,4 +1,4 @@
-function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
+function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
 % cropBrightChunk Segments nuclei from a series of bright field images.
 %
 %   [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
@@ -9,7 +9,8 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
 % and a mapping from image index to frame number. Results are saved to the specified output file.
 %
 % Inputs:
-%   files  - (1,1) string. File pattern for the images, e.g., "Pos6_RFP-T_???.tif".
+%   imgfiles  - (1,1) string. File pattern for the images, e.g., "Pos6_RFP-T_???.tif".
+%   labelfiles    - (1,1) string. File pattern for the labels, e.g., "Pos0_label_???.tif"
 %   output - (1,1) string. Output .mat filename to save the results.
 %
 % Outputs:
@@ -21,6 +22,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
     
     arguments
         files (1,1) string
+        labels (1,1) string
         output (1,1) string
     end
 
@@ -40,34 +42,53 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
     if N == 0
         error("No files found matching pattern: %s", files);
     end
-    root = fs(1).folder;
+
+    ls = dir(labels);
+    N2 = length(ls);
+    if N2 == 0
+        error("No label images: %s", labels);
+    end
+
+    imgroot = fs(1).folder;
+    lblroot = ls(1).folder;
     rawImages = cell(1, N);
     for i = 1:N
-        rawImages{i} = imread(fullfile(root, fs(i).name));
+        % raw image stack
+        rawImages{i} = imread(fullfile(imgroot, fs(i).name));
+        nPixels = size(rawImages{i}, 1);
+
+        % label image stack
+        tmplabel = imbinarize(imread(fullfile(lblroot, ls(i).name)));
+        labelImage{i} = tmplabel;
+        %{
         if i == 1
-            nPixels = size(rawImages{1}, 1);
+            
             [xx, yy] = meshgrid(1:nPixels, 1:nPixels);
             radius = nPixels / 2 / (1 + radiusMargin);
             mask = uint16(hypot(xx - (nPixels+1)/2, yy - (nPixels+1)/2) < radius);
             nanmask = double(mask);
             nanmask(nanmask==0) = NaN;
         end
+        %}
     end
     
     try
         rawImagesCat = cat(3, rawImages{:});
+        labelImageCat = cat(3, labelImage{:});
     catch
         nuclearArea = [];
         idxToFrame = [];
         return;
     end
     
-    maskedImages = uint16(mask) .* rawImagesCat;
+    maskedImages = uint16(labelImageCat) .* rawImagesCat; % xyt stack
     nuclearMask = double(maskedImages);
     
     %% Process each frame to segment nucleus.
     for i = 1:N
         currentImage = double(maskedImages(:,:,i));
+        nanmask = labelImage{i};
+        mask = nanmask;
         gfilt = imgaussfilt(currentImage .* nanmask, gfilterPixels);
         [mint, idx] = max(gfilt, [], "all", "linear");
         [ix, iy] = ind2sub(size(gfilt), idx);
@@ -89,7 +110,8 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, output)
             masked_cyto_images(masked_cyto_images == 0) = NaN;
             mu_val = mean(masked_cyto_images(:), 'omitnan');
             sigma_val = std(masked_cyto_images(:), 'omitnan');
-            standardized = double(mask) .* ((gfilt - mu_val) / sigma_val);
+            standardized = double(nanmask) .* ((gfilt - mu_val) / sigma_val);
+            %standardized = double(mask) .* ((gfilt - mu_val) / sigma_val);
             nuclearMask(:,:,i) = bwareaopen(standardized > intensityThresFactor, floor(nPixels^2 * smallCcThres));
         else
             nuclearMask(:,:,i) = 0;

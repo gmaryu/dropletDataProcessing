@@ -1,7 +1,7 @@
 function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathOutput, imageNameFormats, outputPrefix, outputChannelNames, dx)
-% cropDroplet2  Crop individual droplet images based on tracking data.
+% cropDroplet  Crop individual droplet images based on tracking data.
 %
-%   cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ...
+%   cropDroplet(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ...
 %                imageNameFormats, outputPrefix, outputChannelNames, dx)
 %
 % This function reads droplet tracking data from a TrackMate CSV file, optionally
@@ -24,7 +24,7 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
 %
 % Behavior:
 %   For each frame in the tracking data, the function:
-%     1. Loads the corresponding multi-channel image.
+%     1. Loads the corresponding multi-channel image and label image.
 %     2. Computes a crop region for each droplet based on its maximum radius (with a margin).
 %     3. Saves each cropped droplet image into a subfolder named after the droplet ID.
 %
@@ -54,7 +54,7 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
     end
 
     %% Parameters
-    radiusMargin = 0.01;  % Additional margin added to droplet radius (fraction)
+    radiusMargin = 0.1;  % Additional margin added to droplet radius (fraction)
 
     %% Create output folder if it does not exist
     if ~exist(pathOutput, "dir")
@@ -93,8 +93,7 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
     end
 
     %% Process each frame
-    %maxFrame = max(trackData.FRAME);
-    maxFrame = 2;
+    maxFrame = max(trackData.FRAME);
     tic;
     for frameIdx = 1:(maxFrame + 1)
         frame = frameIdx - 1;
