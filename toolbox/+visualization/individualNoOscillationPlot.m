@@ -5,7 +5,7 @@ if ~exist(savePath, 'dir')
     mkdir(savePath);
 end
 
-positions = unique(oscillationData.timeSeries.POS_ID)';
+positions = unique(oscillationData.noOscillation.POS_ID)';
 ts = oscillationData.noOscillation;
 
 for p = 1:length(positions)

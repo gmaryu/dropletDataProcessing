@@ -20,7 +20,9 @@ for p = 1:length(positions)
         signal = tmpOsci(tmpOsci.TRACK_ID==ids(i),:).MAIN_SIGNAL;
 
         % peaks and troughs
-        peaks = tmpCycs(tmpCycs.TRACK_ID==ids(i),:).START_FRAME;
+        peaks1 = tmpCycs(tmpCycs.TRACK_ID==ids(i),:).START_FRAME;
+        peaks2 = tmpCycs(tmpCycs.TRACK_ID==ids(i),:).END_FRAME;
+        peaks = unique([peaks1, peaks2]);
         troughs = tmpCycs(tmpCycs.TRACK_ID==ids(i),:).TROUGH_FRAME;
 
         % signal value at peaks and troughs
