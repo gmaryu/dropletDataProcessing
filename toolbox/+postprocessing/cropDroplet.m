@@ -1,4 +1,4 @@
-function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, imageNameFormats, outputPrefix, outputChannelNames, dx)
+function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathOutput, imageNameFormats, outputPrefix, outputChannelNames, dx)
 % cropDroplet2  Crop individual droplet images based on tracking data.
 %
 %   cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ...
@@ -14,6 +14,7 @@ function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ima
 %   pathDatabase       - (1x1 string) Directory containing the full frame images. The last folder 
 %                        in this path must denote the position (e.g., "Pos0").
 %   ignoreFile         - (1x1 string) Path to the "force_ignore.csv" file used to filter out droplets.
+%   labelPath          - (1x1 string) Path to the "label" directory used to filter out droplets. 
 %   pathOutput         - (1x1 string) Directory where the cropped droplet images will be saved.
 %   imageNameFormats   - (1xN string array) Format strings for the image filenames for each channel.
 %                        Example: ["img_%09d_4-BF_000.tif", "img_%09d_1-DAPI_000.tif", ...].
@@ -32,7 +33,7 @@ function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ima
 %   - Droplet IDs are assumed to start at 0.
 %
 % Example:
-%   cropDroplet2("exports/20250328_Nocodazole/Pos0_segmented_spots.csv", ...
+%   cropDroplet("exports/20250328_Nocodazole/Pos0_segmented_spots.csv", ...
 %                "raw/20250328_Nocodazole/Pos0", ...
 %                "exports/20250328_Nocodazole/force_ignore.csv", ...
 %                "exports/20250328_Nocodazole/cropped_pos0", ...
@@ -44,6 +45,7 @@ function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ima
         trackmateOutput (1,1) string
         pathDatabase    (1,1) string
         ignoreFile      (1,1) string
+        labelPath       (1,1) string
         pathOutput      (1,1) string
         imageNameFormats (1,:) string
         outputPrefix    (1,1) string
@@ -91,7 +93,8 @@ function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ima
     end
 
     %% Process each frame
-    maxFrame = max(trackData.FRAME);
+    %maxFrame = max(trackData.FRAME);
+    maxFrame = 2;
     tic;
     for frameIdx = 1:(maxFrame + 1)
         frame = frameIdx - 1;
@@ -137,7 +140,41 @@ function cropDroplet2(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ima
                 outputFileName = sprintf("%s_%s_%03d.tif", outputPrefix, outputChannelNames(channelIdx), frame);
                 imwrite(croppedImage, fullfile(dropletDir, outputFileName));
             end
+
+            
         end
+
+        %% label image crop
+        % Read the full label image for the given channel.
+        labelNameFormat = 'raw_label_img_BF_%03d.tif';
+        labelimagePath = fullfile(labelPath, sprintf(labelNameFormat, frame));
+        if ~exist(labelimagePath,'file')
+            fprintf('Label Not Found. Time or labelNameFromat might be different.')
+            return
+        else
+            fullLabel = imread(labelimagePath)';
+            [maxX, maxY] = size(fullLabel);
+        end
+        
+        % Process each droplet in the current frame.
+        for dropletIdx = 1:length(ids)
+            id = ids(dropletIdx);
+            labelid = fullLabel(x(dropletIdx),y(dropletIdx));
+            % Determine crop radius for the droplet.
+            r = maxRadiusLookupTable(id + 1);
+            % Define crop boundaries ensuring they are within the image dimensions.
+            xStart = max(x(dropletIdx) - r, 1);
+            xEnd   = min(x(dropletIdx) + r, maxX);
+            yStart = max(y(dropletIdx) - r, 1);
+            yEnd   = min(y(dropletIdx) + r, maxY);
+            croppedLabel = fullLabel(xStart:xEnd, yStart:yEnd);
+            croppedLabel(croppedLabel ~= labelid) = 0;
+
+            % Save the cropped image with an appropriate file name.
+            dropletDir = fullfile(pathOutput, sprintf("droplet_%03d", id));
+            outputFileName = sprintf("%s_label_%03d.tif", outputPrefix, frame);
+            imwrite(croppedLabel, fullfile(dropletDir, outputFileName));
+        end        
 
         % Erase the previous progress message.
         fprintf(repmat('\b', 1, lineLength));
