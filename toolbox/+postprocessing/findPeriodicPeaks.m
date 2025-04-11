@@ -7,7 +7,7 @@ function retv = findPeriodicPeaks(signal, frameToMin)
 % positions. It returns a matrix with each row as [start_index, end_index, trough_index] if the peaks
 % and troughs match the expected pattern; otherwise, it returns NaN.
 
-    p = 0.1;
+    p = 0.08;
     maxw = 60 / frameToMin;  % Maximum expected peak width in frames
     
     [~, ip] = findpeaks(signal, "MinPeakProminence", p, "MaxPeakWidth", maxw);

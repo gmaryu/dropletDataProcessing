@@ -10,6 +10,7 @@ function retv = detectMultiNuclei(maskMat)
 
         if cc.NumObjects == 1
             retv = 1;
+            
         elseif cc.NumObjects > 1
             lens = sort(cellfun('length', cc.PixelIdxList));
             lcclen = lens(end);

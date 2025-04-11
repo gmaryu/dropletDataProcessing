@@ -87,7 +87,7 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                         fprintf(" - Single nucleus\n");
                     else
                         spermCount = nan;
-                        fprintf(" - Fail type 1\n");
+                        fprintf(" - Fail type 1 - bright pixel in DAPI but area is not enough large\n");
                     end
                     %}
                 elseif sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.001) < 2
@@ -98,13 +98,13 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                 else
                     
                     spermCount = nan;
-                    fprintf(" - Fail type 2\n");
+                    fprintf(" - Fail type 2 - uncategorized error\n");
                     
                 end
                 %}
             else
                 spermCount = NaN;
-                fprintf(" - Number of cycle too small -")
+                fprintf(" - Number of cycle too small -");
             end
         end
 
