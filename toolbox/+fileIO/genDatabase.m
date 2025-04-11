@@ -47,7 +47,7 @@ function database = genDatabase(exportsPath)
             entry.posId = posId;
             entry.trackMateSpotsCsv  = fullfile(exportsPath, sprintf('%s_segmented_spots.csv', posName));
             entry.trackMateTracksCsv = fullfile(exportsPath, sprintf('%s_segmented_tracks.csv', posName));
-            entry.croppedImages      = fullfile(exportsPath, sprintf('cropped_%s', posName));
+            entry.croppedImages      = fullfile(exportsPath, sprintf('singleDroplet/cropped_%s', posName));
             entry.spermCountCsv      = fullfile(exportsPath, sprintf('spermcount_%s.csv', posName));
             entry.forceIgnoreCsv     = fullfile(exportsPath, 'force_ignore.csv');
 
