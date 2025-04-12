@@ -25,17 +25,16 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         labels (1,1) string
         output (1,1) string
     end
-
-    debug = false;
+%%
     radiusMargin = 0.05;
     gfilterPixels = 1;
-    outlierThresFactor = 2.5;
+    outlierThresFactor = 1.5;
     refQuantileLower = 0.25;
-    refQuantileUpper = 0.5;
+    refQuantileUpper = 0.75;
     outlierThres = 0.01;
     smallCcThres = 0.0005;
     gfitMaxStdFactor = 10;
-    intensityThresFactor = 2.5;
+    intensityThresFactor = 1.5;
     
     fs = dir(files);
     N = length(fs);
@@ -61,8 +60,8 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         tmplabel = imbinarize(imread(fullfile(lblroot, ls(i).name)));
         labelImage{i} = tmplabel;
         %{
+        % artificial droplet mask 
         if i == 1
-            
             [xx, yy] = meshgrid(1:nPixels, 1:nPixels);
             radius = nPixels / 2 / (1 + radiusMargin);
             mask = uint16(hypot(xx - (nPixels+1)/2, yy - (nPixels+1)/2) < radius);
@@ -73,6 +72,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     end
     
     try
+        % multi-cell to 3-dimensional matrix 
         rawImagesCat = cat(3, rawImages{:});
         labelImageCat = cat(3, labelImage{:});
     catch
@@ -90,6 +90,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         nanmask = labelImage{i};
         mask = nanmask;
         gfilt = imgaussfilt(currentImage .* nanmask, gfilterPixels);
+        gfilt(gfilt==0)=NaN;
         [mint, idx] = max(gfilt, [], "all", "linear");
         [ix, iy] = ind2sub(size(gfilt), idx);
         ref = median(gfilt(gfilt > quantile(gfilt(:), refQuantileLower) & gfilt < quantile(gfilt(:), refQuantileUpper)));
