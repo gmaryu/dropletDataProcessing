@@ -77,9 +77,11 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
     end
 
     % define logic to count sperm dna copies
-    %{
+    
     if automaticSpermCount
         mn = postprocessing.detectMultiNuclei(nuclearMaskFile);
+        spermCount = mn;
+        %{
         if mn > 1
             spermCount = mn;
         else
@@ -113,8 +115,7 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                 fprintf(" - Number of cycle too small -");
             end
         end
-    
-
+        %}
     end    
-    %}
+    
 end

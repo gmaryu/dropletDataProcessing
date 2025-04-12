@@ -39,7 +39,6 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
             continue;
         end
         
-                
         % Process cycle data for current droplet.
         [tp_updated, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
 
@@ -57,9 +56,6 @@ function [timeSeriesData, cycleData, dropletInfo] = processDroplets(db, trackMat
             spermCount = NaN;
             fprintf(" - cytoplasm only -");
         end
-
-        
-
         
         % Gather processed data.
         timeSeriesData = [timeSeriesData; tm];
