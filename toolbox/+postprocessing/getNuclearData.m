@@ -70,8 +70,14 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
     tm.NPIXEL_DNA = nuclearData.hoechstNPixels';
     tm.SUMINTENSITY_DNA = nuclearData.hoechstSum';
 
+    if max(nuclearData.nuclearArea) ~= 0
+        spermCount = 1;
+    else
+        spermCount = 0;
+    end
 
     % define logic to count sperm dna copies
+    %{
     if automaticSpermCount
         mn = postprocessing.detectMultiNuclei(nuclearMaskFile);
         if mn > 1
@@ -89,7 +95,7 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                         spermCount = nan;
                         fprintf(" - Fail type 1 - bright pixel in DAPI but area is not enough large\n");
                     end
-                    %}
+                    
                 elseif sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.001) < 2
                     
                     spermCount = 0;
@@ -101,13 +107,14 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                     fprintf(" - Fail type 2 - uncategorized error\n");
                     
                 end
-                %}
+                
             else
                 spermCount = NaN;
                 fprintf(" - Number of cycle too small -");
             end
         end
+    
 
     end    
-
+    %}
 end

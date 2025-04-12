@@ -49,10 +49,8 @@ for j = 1:length(subdirs)
         sprintf("Pos%d_label_???.tif", db.posId));
 
     % Construct the output file names for the segmentation results.
-    %nuclearMaskFile = fullfile(db.croppedImages, [strrep(subdirs(j).name, "droplet", "nuclear") '.mat']);
-    %dnaMaskFile     = fullfile(db.croppedImages, [strrep(subdirs(j).name, "droplet", "dna") '.mat']);
-    nuclearMaskFile = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "nuclear"));
-    dnaMaskFile = sprintf("%s/%s.mat", db.croppedImages, strrep(subdirs(j).name, "droplet", "dna"));
+    nuclearMaskFile = fullfile(db.croppedImages, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "nuclear")));
+    dnaMaskFile = fullfile(db.croppedImages, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "dna")));
 
     % Process nuclear segmentation if requested.
     if overwriteNucMask
@@ -60,7 +58,6 @@ for j = 1:length(subdirs)
         try
             % Call the cropping/segmentation routine.
              [nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
-            %[nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, nuclearMaskFile);
             fprintf("Nuclear mask obtained.\n");
         catch ME
             fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
