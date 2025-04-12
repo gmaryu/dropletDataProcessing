@@ -54,7 +54,8 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
     end
 
     %% Parameters
-    radiusMargin = 0.1;  % Additional margin added to droplet radius (fraction)
+    radiusMargin = 0.15;  % Additional margin added to droplet radius (fraction)
+    se = strel('disk',2);
 
     %% Create output folder if it does not exist
     if ~exist(pathOutput, "dir")
@@ -152,6 +153,7 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
             return
         else
             fullLabel = imread(labelimagePath)';
+            fullLabel = imdilate(fullLabel, se);
             [maxX, maxY] = size(fullLabel);
         end
         
