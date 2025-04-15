@@ -1,4 +1,4 @@
-function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
+function [tm, tp, nucleiCount, nucleiCountSeries] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
 %   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
@@ -41,8 +41,8 @@ function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp
         error("Failed to load nuclear data: %s", ME.message);
     end
     
-    nuclearData.nuclearArea = nucData.nuclearArea;
-    nuclearData.idxToFrameNuc = nucData.idxToFrame;
+    nuclearData.nuclearArea = nucData.nuclearArea; % Vector of 1 x timepoints
+    nuclearData.idxToFrameNuc = nucData.idxToFrame; % Vector of 1 x timepoints
     
     % sanity check, frame consistency
     assert(all(tm.FRAME == nuclearData.idxToFrameNuc'));
@@ -50,17 +50,14 @@ function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp
     % Append the obtained data to the tracking table.
     tm.NPIXEL_NUC = nuclearData.nuclearArea';
 
+    % Judge whether there are positive nuclear signal pixels
     if max(nuclearData.nuclearArea) ~= 0
         nucleiCount = 1;
-    else
-        nucleiCount = 0;
-    end
-
-    % define logic to count sperm dna copies
-    
-    if automaticNucleiCount
-        mn = postprocessing.detectMultiNuclei(nuclearMaskFile);
-        nucleiCount = mn;
+        fprintf('- Nuclear object detected')
+        if automaticNucleiCount
+            [nucleiCount, nucleiCountSeries] = postprocessing.detectMultiNuclei(nuclearMaskFile);
+            tm.NUCLEI_COUNT = nucleiCountSeries';
+        end
         %{
         if mn > 1
             spermCount = mn;
@@ -95,7 +92,11 @@ function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp
                 fprintf(" - Number of cycle too small -");
             end
         end
-    %}    
+        %}    
+    else
+        fprintf('- No Nuclear object detected -')
+        tm.NUCLEI_COUNT = NaN*ones(size(tm,1),1);
+        nucleiCount = NaN;
     end    
     
 end

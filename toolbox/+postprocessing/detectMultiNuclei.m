@@ -1,4 +1,4 @@
-function numObjects = detectMultiNuclei(maskMat)
+function [maxObjCount, objCountSeries] = detectMultiNuclei(maskMat)
 %% test mode
 saveMultiNuc = false;
 savePath = 'E:\MATAB_NC_project\exports\test_sperm/multiNuc';
@@ -8,8 +8,19 @@ end
 %%
     thresframe = 10;
     cnt = 0;
-    nucCount = 0;
-    mask = load(maskMat).("nuclearMask");
+    maxObjCount = 1;
+    objCountSeries = [];
+    if contains(maskMat, 'dna')
+        mask = load(maskMat).("dnaMask");
+   
+    elseif contains(maskMat, 'nuclear')
+        mask = load(maskMat).("nuclearMask");
+
+    else
+        fprintf('invalid file type.')
+        return
+    end
+    
     for i = 1:size(mask, 3)
         im = mask(:, :, i);
         % bw = imbinarize(im);
@@ -21,16 +32,18 @@ end
         % cc = bwconncomp(bw_separated);
         cc = bwconncomp(im);
         numObjects = cc.NumObjects;
-        
+        objCountSeries = [objCountSeries, numObjects];
+        %{
         if saveMultiNuc && numObjects > 0
             disp(numObjects);
             fn = sprintf("multiNuc_%d.png",i);
             imwrite(bw_separated, fullfile(savePath,fn));
         end
+        %}
  
-        if numObjects > nucCount 
-           disp(numObjects);
-           nucCount = numObjects;
+        if numObjects > maxObjCount 
+           %disp(numObjects);
+           maxObjCount = numObjects;
         end
         %{
         if cc.NumObjects == 1
@@ -50,5 +63,6 @@ end
         end
         %}
     end
+
 end
 

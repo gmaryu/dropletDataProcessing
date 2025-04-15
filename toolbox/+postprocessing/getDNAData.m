@@ -1,4 +1,4 @@
-function [tm, tp, spermCount] = getDNAData(croppedImages, dropletID, tm, tp, spermCount, hoechstoffset)
+function [tm, tp, spermCount, spermCountSeries] = getDNAData(croppedImages, dropletID, posId, tm, tp, spermCount, hoechstoffset)
 
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
@@ -29,6 +29,7 @@ function [tm, tp, spermCount] = getDNAData(croppedImages, dropletID, tm, tp, spe
     arguments
         croppedImages (1,1) string
         dropletID (1,1) double
+        posId   (1,1) double
         tm  table
         tp table
         spermCount double
@@ -37,20 +38,101 @@ function [tm, tp, spermCount] = getDNAData(croppedImages, dropletID, tm, tp, spe
 
     % Construct file names (using your naming convention).
     dnaMaskFile = fullfile(croppedImages, sprintf("dna_%03d.mat", dropletID));
-    
+    nuclearMaskFile = fullfile(croppedImages, sprintf("nuclear_%03d.mat", dropletID));
+    hoechstImgFiles = fullfile(croppedImages,  sprintf("droplet_%03d/Pos%d_DAPI_???.tif", dropletID, posId));
+
+    %% Hoechst Int Quantification
     % Load mat files
-    try
+    if exist(dnaMaskFile, "file")
         dnaData = load(dnaMaskFile);
-    catch ME
-        error("Failed to load nuclear or DNA data: %s", ME.message);
+        nucData = load(nuclearMaskFile);
+    else
+        fprintf("No DNA.mat data");
+        tm.SPERM_COUNT = NaN*ones(size(tm,1),1);
+        tm.SUM_SPERM_HOECHST_INT = NaN*ones(size(tm,1),1);
+        tm.SUM_NUCLEUS_HOECHST_INT = NaN*ones(size(tm,1),1);
+        tm.NPIXEL_DNA = squeeze(sum(sum(dnaData.dnaMask, 1), 2));
+        spermCount=NaN;
+        return
     end
     
+    % Load hoechst images
+    fs = dir(hoechstImgFiles);
+    imgroot = fs(1).folder;
+    N = length(fs);
+    rawHoechstImages = cell(1, N);
+    for i = 1:N
+        % raw image stack
+        rawHoechstImages{i} = imread(fullfile(imgroot, fs(i).name));
+    end
+    rawImagesCat = cat(3, rawHoechstImages{:});
+    
+    % Area specific hoechst 
+    nucHoechstInt = double(rawImagesCat).*nucData.nuclearMask;
+    dnaHoechstInt = double(rawImagesCat).*dnaData.dnaMask;
+
+    tm.SUM_SPERM_HOECHST_INT = squeeze(sum(sum(dnaHoechstInt, 1), 2));
+    tm.SUM_NUCLEUS_HOECHST_INT = squeeze(sum(sum(nucHoechstInt, 1), 2));
+    tm.NPIXEL_DNA = squeeze(sum(sum(dnaData.dnaMask, 1), 2));
+
+    %% Sperm Counting
     if any(dnaData.dnaMask(:) > 0)
         spermCount = 1;
     else
         spermCount = 0;
     end
-    
+
+    % Judge whether there are positive nuclear signal pixels
+    if max(dnaData.hoechstArea) ~= 0
+        spermCount = 1;
+        fprintf('- Nuclear object detected')
+        [~, spermCountSeries] = postprocessing.detectMultiNuclei(dnaMaskFile);
+        spermCount = spermCountSeries(1);% superm number at first time frame when tracking started
+        tm.SPERM_COUNT = spermCountSeries';
+        %{
+        if mn > 1
+            spermCount = mn;
+        else
+            if size(tp, 1) >= 3 % more than three peaks
+                if sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.0001) > size(tp, 1) - 2
+                    
+                    % single nuclear exists
+                    if max(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.05 && max(power(tp.DNA_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.005
+                        % maximum n/c volume > 0.05 & maximum Hoechst volume > 0.005
+                        spermCount = 1;
+                        fprintf(" - Single nucleus\n");
+                    else
+                        spermCount = nan;
+                        fprintf(" - Fail type 1 - bright pixel in DAPI but area is not enough large\n");
+                    end
+                    
+                elseif sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.001) < 2
+                    
+                    spermCount = 0;
+                    fprintf(" - No nucleus\n");
+                    
+                else
+                    
+                    spermCount = nan;
+                    fprintf(" - Fail type 2 - uncategorized error\n");
+                    
+                end
+                
+            else
+                spermCount = NaN;
+                fprintf(" - Number of cycle too small -");
+            end
+        end
+        %}    
+    else
+        fprintf('- No Nuclear object detected -')
+        tm.SPERM_COUNT = NaN*ones(size(tm,1),1);
+        tm.SUM_SPERM_HOECHST_INT = NaN*ones(size(tm,1),1);
+        tm.SUM_NUCLEUS_HOECHST_INT = NaN*ones(size(tm,1),1);
+        tm.NPIXEL_DNA = squeeze(sum(sum(dnaData.dnaMask, 1), 2));
+        spermCount = NaN;
+    end    
+
     % nuclearData.hoechstSum = dnaData.hoechstsum;
     % nuclearData.hoechstNPixels = dnaData.npts;
     % nuclearData.idxToFrameDNA = dnaData.idxToFrame;

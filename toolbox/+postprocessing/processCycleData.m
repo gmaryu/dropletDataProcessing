@@ -1,5 +1,5 @@
 function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition)
-% processCycleData Process cycle metrics for a single droplet.
+% processCycleData process cycle metrics for a single droplet.
 %
 %   [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition)
 %
@@ -69,8 +69,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         % Compute time vector in minutes.
         t = frameToMin * cycleData.FRAME;
         
-        if spermCondition && ismember('SUMINTENSITY_DNA', cycleData.Properties.VariableNames)
-            hoechst = cycleData.SUMINTENSITY_DNA;
+        if spermCondition && ismember('SUM_SPERM_HOECHST_INT', cycleData.Properties.VariableNames)
+            hoechst = cycleData.SUM_SPERM_HOECHST_INT;
             valid = ~isnan(hoechst);
             t = t(valid);
             hoechst = hoechst(valid);
@@ -100,7 +100,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             interphaseStartFrame(k) = cycleData.FRAME(intstart);
             intData = cycleData(cycleData.FRAME >= interphaseStartFrame(k), :);
             nucPixelsQ90(k) = quantile(intData.NPIXEL_NUC, 0.9);
-            dnaSumIntQ90(k) = quantile(intData.SUMINTENSITY_DNA, 0.9);
+            dnaSumIntQ90(k) = quantile(intData.SUM_SPERM_HOECHST_INT, 0.9);
             dnaPixelsQ90(k) = quantile(intData.NPIXEL_DNA, 0.9);
             if ~isempty(intend) && intend > intstart
                 interphaseEndFrame(k) = cycleData.FRAME(intend);

@@ -23,8 +23,6 @@ function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, f
     end
     
 
-    trackPeaks =[]; % for test
-
     % Analyze oscillation dynamics
     if ~isempty(trackPeaks)
         % Process droplet-level data.
