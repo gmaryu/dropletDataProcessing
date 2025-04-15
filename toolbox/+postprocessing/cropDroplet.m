@@ -1,4 +1,4 @@
-function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathOutput, imageNameFormats, outputPrefix, outputChannelNames, dx)
+function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathOutput, imageNameFormats, outputPrefix, outputChannelNames, dx, radiusMargin)
 % cropDroplet  Crop individual droplet images based on tracking data.
 %
 %   cropDroplet(trackmateOutput, pathDatabase, ignoreFile, pathOutput, ...
@@ -21,6 +21,7 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
 %   outputPrefix       - (1x1 string) A prefix for the output file names (e.g., "Pos0").
 %   outputChannelNames - (1xN string array) Short names for each channel (e.g., ["BF", "DAPI", ...]).
 %   dx                 - (1x1 double) Physical length per pixel (e.g., in micrometers).
+%   radiusMargin       - (1x1 double) Additional margin added to droplet radius (fraction)
 %
 % Behavior:
 %   For each frame in the tracking data, the function:
@@ -51,10 +52,11 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
         outputPrefix    (1,1) string
         outputChannelNames (1,:) string
         dx              (1,1) double {mustBePositive}
+        radiusMargin    (1,1) double
     end
 
     %% Parameters
-    radiusMargin = 0.15;  % Additional margin added to droplet radius (fraction)
+      
     se = strel('disk',2);
 
     %% Create output folder if it does not exist

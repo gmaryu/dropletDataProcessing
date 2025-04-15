@@ -126,7 +126,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         overlay = imoverlay(rawImagesCat(:,:,i), bwperim(nuclearMask(:,:,i)), [0, 1, 0]);
         name = strrep(fs(i).name, ".tif", "_segmented_new.tif");
         % Uncomment the line below to save overlay images.
-        imwrite(overlay, fullfile(imgroot, name));
+        %imwrite(overlay, fullfile(imgroot, name));
     end
     
     %% Determine frame indices from file names.

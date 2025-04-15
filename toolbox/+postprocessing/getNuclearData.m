@@ -1,4 +1,4 @@
-function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp, spermCount, automaticSpermCount, hoechstoffset)
+function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
 %   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
@@ -9,12 +9,9 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
 %
 % Inputs:
 %   croppedImages - (1,1) string specifying the directory with cropped droplet images.
-%   posId         - (1,1) numeric position identifier.
 %   dropletID     - (1,1) numeric droplet identifier.
-%   nucChannel    - (1,1) string for the nuclear channel name.
-%   dnaChannel    - (1,1) string for the DNA/Hoechst channel name.
+
 %   automaticSpermCount - (1,1) logical flag indicating whether to apply auto nuclei conunting.
-%   hoechstoffset - (1,1) logical flag indicating whether to apply Hoechst offset correction.
 %
 % Output:
 %   nuclearData - A structure with fields:
@@ -30,57 +27,40 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
         dropletID (1,1) double
         tm  table
         tp table
-        spermCount double
-        automaticSpermCount logical
-        hoechstoffset logical
+        nucleiCount double
+        automaticNucleiCount logical
     end
 
     % Construct file names (using your naming convention).
     nuclearMaskFile = fullfile(croppedImages, sprintf("nuclear_%03d.mat", dropletID));
-    dnaMaskFile = fullfile(croppedImages, sprintf("dna_%03d.mat", dropletID));
     
     % Load mat files
     try
         nucData = load(nuclearMaskFile);
-        dnaData = load(dnaMaskFile);
     catch ME
-        error("Failed to load nuclear or DNA data: %s", ME.message);
+        error("Failed to load nuclear data: %s", ME.message);
     end
     
     nuclearData.nuclearArea = nucData.nuclearArea;
     nuclearData.idxToFrameNuc = nucData.idxToFrame;
     
-    nuclearData.hoechstSum = dnaData.hoechstsum;
-    nuclearData.hoechstNPixels = dnaData.npts;
-    nuclearData.idxToFrameDNA = dnaData.idxToFrame;
-
-    if ~hoechstoffset
-        % If offset correction is disabled, adjust using smoothbg (if available).
-        if isfield(dnaData, 'smoothbg')
-            nuclearData.hoechstSum = nuclearData.hoechstSum + dnaData.smoothbg .* nuclearData.hoechstNPixels;
-        end
-    end
-    
     % sanity check, frame consistency
     assert(all(tm.FRAME == nuclearData.idxToFrameNuc'));
-    assert(all(tm.FRAME == nuclearData.idxToFrameDNA'));
 
     % Append the obtained data to the tracking table.
     tm.NPIXEL_NUC = nuclearData.nuclearArea';
-    tm.NPIXEL_DNA = nuclearData.hoechstNPixels';
-    tm.SUMINTENSITY_DNA = nuclearData.hoechstSum';
 
     if max(nuclearData.nuclearArea) ~= 0
-        spermCount = 1;
+        nucleiCount = 1;
     else
-        spermCount = 0;
+        nucleiCount = 0;
     end
 
     % define logic to count sperm dna copies
     
-    if automaticSpermCount
+    if automaticNucleiCount
         mn = postprocessing.detectMultiNuclei(nuclearMaskFile);
-        spermCount = mn;
+        nucleiCount = mn;
         %{
         if mn > 1
             spermCount = mn;
@@ -115,7 +95,7 @@ function [tm, tp, spermCount] = getNuclearData(croppedImages, dropletID, tm, tp,
                 fprintf(" - Number of cycle too small -");
             end
         end
-        %}
+    %}    
     end    
     
 end
