@@ -19,7 +19,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 # === Folder setup ===
-inputFolder = File("E:/MATAB_NC_project/test_noOsci") ## Defined by User
+inputFolder = File("E:/MATAB_NC_project/test_Sperm2") ## Defined by User
 outputFolder = File("E:/MATAB_NC_project/exports/" + inputFolder.getName())  ## Defined by User
 if not outputFolder.exists():
     outputFolder.mkdirs()

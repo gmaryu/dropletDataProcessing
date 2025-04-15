@@ -1,12 +1,12 @@
 import os
 from ij import IJ, ImagePlus, WindowManager
 
-data_path="E:/MATAB_NC_project/test_noOsci/"
-label_path="E:/MATAB_NC_project/exports/test_noOsci/labels/"
+data_path="E:/MATAB_NC_project/test_Sperm/"
+label_path="E:/MATAB_NC_project/exports/test_Sperm/labels/"
 frame=100
 channel=5
-positions=[1,2]
-output_path = "E:/MATAB_NC_project/test_noOsci"
+positions=[13]
+output_path = "E:/MATAB_NC_project/test_Sperm"
 
 for p in positions:
 	# load raw image
