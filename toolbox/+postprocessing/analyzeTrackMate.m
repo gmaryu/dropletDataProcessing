@@ -1,7 +1,7 @@
 function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ratDen, frameToMin, forceIgnore)
-% analyzeTrackMate2 Processes TrackMate spots data and detects periodic peaks.
+% analyzeTrackMate Processes TrackMate spots data and detects periodic peaks.
 %
-%   [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate2(db, ratNum, ratDen, frameToMin, forceIgnore)
+%   [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ratDen, frameToMin, forceIgnore)
 %
 % This function reads a TrackMate spots CSV file (skipping the first row) from the
 % database structure, computes a main signal as the ratio of the fields given by ratNum
@@ -33,7 +33,6 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
         forceIgnore table
     end
 
-    debug = false;
 
     trackMateFile = db.trackMateSpotsCsv;
     target_position = db.posId;
@@ -49,9 +48,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     trackNoPeaks = table();
     
     for i = 1:length(ids)
-        if debug
-            fprintf("%d", ids(i));
-        end
+
         track = sortrows(trackMate(trackMate.TRACK_ID == ids(i), :), "FRAME");
         
         % Filter tracks with abnormal area variations.
