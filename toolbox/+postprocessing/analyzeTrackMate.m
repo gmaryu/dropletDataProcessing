@@ -40,8 +40,19 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     % Read and sort tracking data (skipping first row).
     trackMate = readtable(trackMateFile);
     trackMate = sortrows(sortrows(trackMate(2:end, :), "FRAME"), "TRACK_ID");
-    trackMate.MAIN_SIGNAL = trackMate.(ratNum) ./ trackMate.(ratDen);
-    
+
+    % Calculate FRET ratio
+    flagFRET = 0;
+    try
+        trackMate.MAIN_SIGNAL = trackMate.(ratNum) ./ trackMate.(ratDen);
+    catch
+        % Return sorted TrackMate reuslt without ratio calculation
+        fprintf('No FRET denominator and neumerator');
+        flagFRET = 1;
+         
+    end
+
+    % Peak detection
     ids = unique(trackMate.TRACK_ID);
     cnt = 0;
     trackPeaks = table();
@@ -69,8 +80,14 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
             try
                 pidx = postprocessing.findPeriodicPeaks(track.MAIN_SIGNAL, frameToMin);
             catch
-                fprintf("ID:%d - Invalid peaks\n", ids(i));
+                if flagFRET
+                    fprintf("ID:%d - No ratio column\n", ids(i));
+                else
+                    fprintf("ID:%d - Invalid peaks\n", ids(i));
+                end
+                trackNoPeaks = [trackNoPeaks; track];
                 continue;
+            
             end
             
             if isempty(pidx) || all(isnan(pidx(:)))

@@ -17,7 +17,14 @@ function createTestData(srcFolder, destRoot, posVec, frameVec, colorSet)
     %   3. Copies the matching files into the corresponding position folder, keeping the original file names.
     %
     % Example:
-    %   createTestData("C:\Data\Original", "C:\Data\Test", [3,5], 1:150,);
+    % imageNameFormats = [
+    %     "img_%09d_4-BF_000.tif", ...
+    %     "img_%09d_1-DAPI_000.tif", ...
+    %     "img_%09d_5-CFP_000.tif", ...
+    %     "img_%09d_6-YFP_000.tif", ...
+    %     "img_%09d_8-Custom_000.tif", ...
+    %     ];
+    % fileIO.createTestData("C:\Data\Original", "C:\Data\Test", [3,5], 1:150,imageNameFormats);
     
         srcFolder = string(srcFolder);
         destRoot  = string(destRoot);
@@ -35,7 +42,7 @@ function createTestData(srcFolder, destRoot, posVec, frameVec, colorSet)
                 for color = colorSet
                     % Construct the search pattern
                     pattern = sprintf(color{1},f);
-                    files = dir(fullfile(srcFolder, sprintf('Pos%d', p), pattern));
+                    files = dir(fullfile(srcFolder, sprintf('Pos%d', p), sprintf('*%s*',pattern)));
                     
                     if isempty(files)
                         fprintf('No files found for Pos%d  with pattern: %s\n', ...
