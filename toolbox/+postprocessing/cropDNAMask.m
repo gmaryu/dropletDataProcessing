@@ -10,18 +10,21 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
 %
 % Inputs:
 %   files           - (1,1) string. File pattern for Hoechst images, e.g., "Pos6_DAPI_???.tif".
+%   labels          - (1,1) string. File pattern for label images
 %   nucSegOutputMat - (1,1) string. Filename of the .mat file containing nuclearMask and idxToFrame.
 %   output          - (1,1) string. Output filename to save the results.
 %
 % Outputs:
-%   hoechstsum - 1×N vector of total Hoechst intensity per frame.
-%   npts       - 1×N vector of number of pixels above the threshold per frame.
-%   smooththres- 1×N vector of threshold values computed from the nuclear region.
-%   smoothbg   - 1×N vector of background intensity values.
+%   dnaMask    - 3-D matrix for dna mask result
+%   hoechstArea- 1×N vector of total number of positive Hoechst intensity pixels
 %   idxToFrame - 1×N vector mapping image index to frame number.
+%   fs         - string of reffered image file path
+%   NucDNAMask - 3-D matrix for nuclear mask result. When nuclear area is
+%                   empty in orignal result, DNA mask is transferred as
+%                   nuclear tentative mask.%   
 %
 % Example:
-%   [hsum, npts, sthres, sbg, idx] = postprocessing.sumHoechstIntwNucMask("Pos6_DAPI_???.tif", "nuclearSeg.mat", "output.mat");
+%   [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat, output)
 
     arguments
         files (1,1) string
@@ -30,17 +33,11 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
         output (1,1) string
     end
 
-    radiusMargin = 0.15 + 0.05;
-    gfilterPixels = 1;
-    outlierThresFactor = 3;
-    refQuantileLower = 0.5;
-    refQuantileUpper = 0.95;
-    outlierThres = 0.01;
-    smallCcThres = 0.0005;
-    gfitMaxStdFactor = 10;
-    intensityThresFactor = 1.5;
+    %% parameters
+    bwareaopenthresh = 15;
 
-    % Load nuclear segmentation results.
+    %% fileIO
+    % Load nuclear segmentation results. All droplets have nuclear mask.
     nucData = load(nucSegOutputMat);
     nucMask = nucData.nuclearMask;
 
@@ -48,12 +45,12 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
     dnaMask = zeros(size(nucMask));
     NucDNAMask = zeros(size(nucMask));
 
-    % Nucler ojbect check if no nucleus in entire frames, detection process
+    %% DNA area segmentation
+    % Nucler ojbect check: if no nucleus in entire frames, detection process
     % is passed. Save empty variables.
-
     if max(nucData.nuclearArea) ~= 0
 
-        % DAPI images
+        % collect DAPI images information
         fs = dir(files);
         N = length(fs);
         if N == 0
@@ -61,7 +58,7 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
         end
         imgroot = fs(1).folder;
 
-        % Droplet labels
+        % collect Droplet labels information
         ls = dir(labels);
         N2 = length(ls);
         if N2 == 0
@@ -69,26 +66,26 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
         end
         lblroot = ls(1).folder;
 
+        % sanity check
         if size(nucMask,3) ~= N
-            error("Frame count mismatch: nuclearMask and image files differ.");
+            error("Frame count mismatch: nuclearMask and image files different.");
         end
 
+        % separate image to image stack
         rawImages = cell(1, N);
-        bgs = zeros(1,N);
-        ts = zeros(1,N);
+        labelImage = cell(1, N);
         for i = 1:N
             rawImages{i} = imread(fullfile(imgroot, fs(i).name));
             nPixels = size(rawImages{i}, 1);
-            tmplbl = imread(fullfile(lblroot, ls(i).name));
             %{
-        if i == 1
-            nPixels = size(rawImages{1}, 1);
-            [xx, yy] = meshgrid(1:nPixels, 1:nPixels);
-            radius = nPixels / 2 / (1 + radiusMargin);
-            mask = uint16(hypot(xx - (nPixels+1)/2, yy - (nPixels+1)/2) < radius);
-            nanmask = double(mask);
-            nanmask(nanmask==0) = NaN;
-        end
+                if i == 1
+                    nPixels = size(rawImages{1}, 1);
+                    [xx, yy] = meshgrid(1:nPixels, 1:nPixels);
+                    radius = nPixels / 2 / (1 + radiusMargin);
+                    mask = uint16(hypot(xx - (nPixels+1)/2, yy - (nPixels+1)/2) < radius);
+                    nanmask = double(mask);
+                    nanmask(nanmask==0) = NaN;
+                end
             %}
 
             % label image stack
@@ -108,71 +105,108 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
 
         maskedImages = uint16(labelImageCat) .* rawImagesCat;
         
+        %% skewness values of intensity histogram for each frame
+        % The skewness of the histogram changes with the degree of DNA condensation.
+        skewVec = zeros(N,1);
+        for t = 1:N
+            I = double(maskedImages(:,:,t));
+
+            se = strel('disk', 20);
+            I_tophat = imtophat(I, se);
+            
+            mask = I_tophat > 0;
+            pix = I(mask);
+
+            skewVec(t) = skewness(double(pix));
+        end
+        smoothSkew = movmean(skewVec, [1 1]);
+
 
         %% Process each frame to segment nucleus.
         for i = 1:N
             currentImage = double(maskedImages(:,:,i));
-            nanmask = labelImage{i};
-            mask = nanmask;
-            
-            gfilt = imgaussfilt(currentImage .* nanmask, gfilterPixels);
-            gfilt(gfilt==0)=NaN;
-            [mint, idx] = max(gfilt, [], "all", "linear");
-            [ix, iy] = ind2sub(size(gfilt), idx);
-            ref = median(gfilt(gfilt > quantile(gfilt(:), refQuantileLower) & gfilt < quantile(gfilt(:), refQuantileUpper)));
-            t_val = outlierThresFactor * -1/(sqrt(2)*erfcinv(3/2)) * median(abs(gfilt(:)-ref), "omitnan");
-            outliers = imgaussfilt(double(gfilt - ref > t_val), gfilterPixels);
-            outliers(outliers < 0.3) =0;
-            
-            
-            currentImage2 = currentImage .* nanmask;
-            ref2 = median(currentImage2(currentImage2 > quantile(currentImage2(:), refQuantileLower) & currentImage2 < quantile(currentImage2(:), refQuantileUpper)));
-            t_val2 = outlierThresFactor * -1/(sqrt(2)*erfcinv(3/2)) * median(abs(currentImage2(:)-ref2), "omitnan");
-            outliers2 = double(currentImage2 - ref2 > t_val2);
-            dnaMask(:,:,i) = outliers2;
+            % background cleaning 
+            se = strel('disk', 20);
+            I_tophat = imtophat(currentImage, se);
+            I_tophat_NaN = I_tophat;
+            I_tophat_NaN(I_tophat==0) = NaN;
 
-            %% too large autofluorescence junk
-            dropletArea = sum(double(nanmask(:)));
-            binaryDnaMask = double(outliers2 > 0);
-            brightArea = sum(binaryDnaMask(:));
-            if brightArea/dropletArea > 0.2
-                fprintf(' - There might be a large junk. Skip this droplet -');
-                hoechstArea = NaN*ones(1,N);
-                idxToFrame = NaN*ones(1,N);
-                return
+            % pixel information of NaN
+            pix = I_tophat_NaN(~isnan(I_tophat_NaN));
+
+            if smoothSkew(i) > median(skewVec) || smoothSkew(i) > 4
+                % detect outlier pixels in very skewed intensity histogram
+                tf = isoutlier(pix,'quartiles');
+                outlierMask = false(size(I));
+                outlierMask(~isnan(I_tophat_NaN)) = tf;
+                BW = outlierMask;
+
+            else
+                % percentile scaling in modarate skewed intensity histogam
+                p1 = prctile(I_tophat_NaN(:), 1);
+                p90= prctile(I_tophat_NaN(:), 90);
+                %p1_series = [p1_series, p1];
+                %p90_series = [p90_series, p90];
+                I_norm = imadjust(I_tophat/max(I_tophat(:)), [p1 p90]/max(I_tophat(:)), [0 1]);
+                BW = imbinarize(I_norm);
+                
             end
+
+            % data cleaning
+            % 1) labeling
+            CC = bwconncomp(BW);
+
+            % 2) calculation of detected object stats
+            stats = regionprops(CC, 'Area', 'Eccentricity', 'Solidity', 'PixelIdxList');
+
+            % 3) filtering parameters
+            eccThresh = 0.95;
+            solThresh = 0.5;
+
+            
+            toRemove = false(size(stats));
+            for h = 1:numel(stats)
+                badShape = stats(h).Eccentricity > eccThresh || stats(h).Solidity < solThresh;
+
+                % if detected area is on the periferi
+                regionMask = false(size(BW));
+                regionMask(stats(h).PixelIdxList) = true;
+                % 1-pixel dilation
+                regionDilated = imdilate(regionMask, strel('disk',1));
+                % if dialated area is overllaped with outer region of dropletMask -> true
+                touchesEdge = any( regionDilated(:) & ~I(:) );
+
+                if badShape && touchesEdge
+                    toRemove(h) = true;
+                end
+
+                % detected reagion is too large ignore the area (0.2 based on
+                % maximum area nucleus is ~10% of droplet area)
+                d_area = sum(I(:)>0);
+                if stats(h).Area > d_area * 0.33
+                    toRemove(h) = true;
+                end
+            end
+            
+            for h = find(toRemove)'
+                BW(stats(h).PixelIdxList) = false;
+            end
+
+            BW = imfill(BW, 'holes');
+            BW = bwareaopen(BW, bwareaopenthresh);
+
+            dnaMask(:,:,i) = BW;
+
 
             %% compare nuclear amsk and DNA mask upgrade the accuracy of nuclear segmentation result
             tmpNucMask = double(nucMask(:,:,i));
+            binaryDnaMask = dnaMask(:,:,i);
             diffMask = tmpNucMask - binaryDnaMask;
-            if any(diffMask(:) < 0)
+            if any(diffMask(:) < 0) && ~any(tmpNucMask, 'all')
                 %fprintf(' - Nuc Area updated based on Hoechst data -');
                 NucDNAMask(:,:,i) = tmpNucMask + binaryDnaMask;
-
             end
 
-            %{
-            if outliers(ix, iy) > outlierThres
-                [my, mx] = meshgrid(1:size(mask,1), 1:size(mask,2));
-                idx_fit = ~isnan(gfilt);
-                g2d_residuals = @(p, x, y, z) p(1)*exp(-((x-ix).^2+(y-iy).^2)/p(2)) + p(3) - z;
-                opts = optimset('Display','off');
-                initialGuess = [mint - mean(gfilt(:), 'omitnan'), 1, mean(gfilt(:), 'omitnan')];
-                lb = [0, 0, 0];
-                ub = [inf, (size(gfilt,1)/gfitMaxStdFactor)^2, inf];
-                gfit = lsqnonlin(@(p) g2d_residuals(p, mx(idx_fit), my(idx_fit), gfilt(idx_fit)), initialGuess, lb, ub, opts);
-                mask_cyto = gfit(1)*exp(-((mx-ix).^2+(my-iy).^2)/gfit(2)) + gfit(3) < gfit(1)*exp(-3) + gfit(3);
-                masked_cyto_images = gfilt .* double(mask_cyto);
-                masked_cyto_images(masked_cyto_images == 0) = NaN;
-                mu_val = mean(masked_cyto_images(:), 'omitnan');
-                sigma_val = std(masked_cyto_images(:), 'omitnan');
-                standardized = double(nanmask) .* ((gfilt - mu_val) / sigma_val);
-                %standardized = double(mask) .* ((gfilt - mu_val) / sigma_val);
-                dnaMask(:,:,i) = bwareaopen(standardized > intensityThresFactor, floor(nPixels^2 * smallCcThres));
-            else
-                dnaMask(:,:,i) = 0;
-            end
-            %}
         end
         hoechstsum =[];
         npts = [];
@@ -212,7 +246,8 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
     %% (Optional) Save overlay images.
     for i = 1:N
         overlay = imoverlay(rawImagesCat(:,:,i), bwperim(dnaMask(:,:,i)), [0, 1, 0]);
-        name = strrep(fs(i).name, ".tif", "_segmented_DNA.tif");
+        name = sprintf("DnaMask_Overlay_%03d.tif",i);
+        
         % Uncomment the line below to save overlay images.
         %imwrite(overlay, fullfile(imgroot, name));
     end
@@ -250,9 +285,8 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
     hoechstsum = qtl;
     smooththres = ts;
     smoothbg = bgs;
-    
-    
-    %}
     %save(output, "dnaMask","hoechstArea", "npts", "smooththres", "smoothbg", "idxToFrame");
+    %}
+    
     save(output, "dnaMask","hoechstArea", "idxToFrame","fs", "NucDNAMask");
 end
