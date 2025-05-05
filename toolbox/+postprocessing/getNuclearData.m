@@ -1,4 +1,4 @@
-function [tm, tp, nucleiCount, nucleiCountSeries] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
+function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
 %   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
@@ -94,7 +94,7 @@ function [tm, tp, nucleiCount, nucleiCountSeries] = getNuclearData(croppedImages
         end
         %}    
     else
-        fprintf('- No Nuclear object detected -')
+        fprintf('- No nuclear object detected')
         tm.NUCLEI_COUNT = NaN*ones(size(tm,1),1);
         nucleiCount = NaN;
     end    

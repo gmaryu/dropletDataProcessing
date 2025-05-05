@@ -136,18 +136,17 @@ end
             end
         else
             nucleiCount = NaN;
-            fprintf(" - cytoplasm only -");
+            fprintf(" - cytoplasm only");
         end
 
-        % If spermCondition true, perform nuclear quantification.
+        % If hoechstCondition true, perform DNA quantification.
         if hoechstCondition
             try
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
                 % run detectMultiNuclei
                 % [tm_updated, tp_updated, spermCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm_updated, tp_updated, spermCount, hoechstoffset);
-                [tm, tp, spermCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
+                [tm, tp, spermCount, nucleiCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
                 
-                fprintf(" - DNA mask obtained");
             catch
                 %fprintf(" - Ignored. .mat file not found.\n");
                 fprintf(" - Failed. getDNAData\n");
@@ -156,14 +155,15 @@ end
             end
         else
             spermCount = NaN;
-            fprintf(" - cytoplasm only -");
+            fprintf(" - No DNA staining -");
         end
+
         
         % Process cycle data for current droplet.
        
         %[tp_updated, cycleMetrics] = postprocessing.processCycleData(tp_updated, tm_updated, frameToMin, pixelToUm, spermCondition);
         [tp, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
-
+        
         % Gather processed data.
         timeSeriesData = [timeSeriesData; tm];
         % timeSeriesData = [timeSeriesData; tm_updated];

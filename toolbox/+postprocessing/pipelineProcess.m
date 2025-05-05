@@ -45,7 +45,8 @@ function data = pipelineProcess(database, totalPositions, frameToMin, pixelToUm,
 %       • data.cycle       : Merged oscillation cycle table  
 %       • data.FrameToMin  : frameToMin (echoed)  
 %       • data.PixelToUm   : pixelToUm (echoed)  
-%       • data.InitialPeakTimeBound : initialPeakTimeBound (echoed)  
+%       • data.InitialPeakTimeBound : initialPeakTimeBound (echoed)
+%       • data.noOscillation: Merged tracking time series table of no-oscillation droplets
 %
 % Workflow:
 %   1. Iterate through each element of `database`.  

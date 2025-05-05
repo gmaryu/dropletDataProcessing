@@ -114,7 +114,7 @@ end
     end
     spermRef = readtable(db.spermCountCsv);
 
-    %% Generate nuclear masks and DNA content intensity data mat files.
+    %% Generate nuclear masks and DNA mask mat files.
     if spermCondition
         % Here we call nuclearQuantification on just this position to segment nuclei and DNA.
         % cropBrightChunk
@@ -123,7 +123,7 @@ end
     end
     
 
-    % Analyze oscillation dynamics
+    %% Analyze oscillation dynamics
     if ~isempty(trackPeaks)
         % Process droplet-level data.
         [timeSeriesData, cycleData, dropletInfo] = postprocessing.processDroplets(db, trackMate, trackPeaks, spermRef, db.posId, frameToMin, ...

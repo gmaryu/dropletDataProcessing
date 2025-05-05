@@ -25,8 +25,8 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         labels (1,1) string
         output (1,1) string
     end
-%%
-    radiusMargin = 0.05;
+
+    %% parameters for nuclear segmentation
     gfilterPixels = 1;
     outlierThresFactor = 1.5;
     refQuantileLower = 0.25;
@@ -36,6 +36,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     gfitMaxStdFactor = 10;
     intensityThresFactor = 1.5;
     
+    %% fileIO and image2stack
     fs = dir(files);
     N = length(fs);
     if N == 0
@@ -81,7 +82,9 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         return;
     end
     
+    % replace pixels of droplet outside to 0
     maskedImages = uint16(labelImageCat) .* rawImagesCat; % xyt stack
+    % matrix allocation for out
     nuclearMask = double(maskedImages);
     
     %% Process each frame to segment nucleus.
@@ -89,11 +92,14 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         currentImage = double(maskedImages(:,:,i));
         nanmask = labelImage{i};
         mask = nanmask;
+
+        % gaussian fitting of to detect nuclear area (brightest area) and 
+        % estimate cytoplasm area intensity as ref
         gfilt = imgaussfilt(currentImage .* nanmask, gfilterPixels);
         gfilt(gfilt==0)=NaN;
-        [mint, idx] = max(gfilt, [], "all", "linear");
-        [ix, iy] = ind2sub(size(gfilt), idx);
-        ref = median(gfilt(gfilt > quantile(gfilt(:), refQuantileLower) & gfilt < quantile(gfilt(:), refQuantileUpper)));
+        [mint, idx] = max(gfilt, [], "all", "linear");  % find brightest spot
+        [ix, iy] = ind2sub(size(gfilt), idx);           % position of brightest sport
+        ref = median(gfilt(gfilt > quantile(gfilt(:), refQuantileLower) & gfilt < quantile(gfilt(:), refQuantileUpper))); % collect intensity profile lower and upper quantile (possibliy cytoplasm area)
         t_val = outlierThresFactor * -1/(sqrt(2)*erfcinv(3/2)) * median(abs(gfilt(:)-ref), "omitnan");
         outliers = imgaussfilt(double(gfilt - ref > t_val), gfilterPixels);
         
@@ -115,6 +121,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
             %standardized = double(mask) .* ((gfilt - mu_val) / sigma_val);
             nuclearMask(:,:,i) = bwareaopen(standardized > intensityThresFactor, floor(nPixels^2 * smallCcThres));
         else
+            % no nucleus-like structure
             nuclearMask(:,:,i) = 0;
         end
     end
@@ -124,7 +131,8 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     %% (Optional) Save overlay images.
     for i = 1:N
         overlay = imoverlay(rawImagesCat(:,:,i), bwperim(nuclearMask(:,:,i)), [0, 1, 0]);
-        name = strrep(fs(i).name, ".tif", "_segmented_new.tif");
+        name = sprintf("NucMask_Overlay_%03d.tif",i);
+
         % Uncomment the line below to save overlay images.
         %imwrite(overlay, fullfile(imgroot, name));
     end

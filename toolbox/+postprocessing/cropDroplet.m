@@ -55,8 +55,9 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
         radiusMargin    (1,1) double
     end
 
-    %% Parameters
-      
+    %% Morphological parameter for label dilation
+    % Expand label edge created by bright field image to fit fluoresent
+    % image
     se = strel('disk',2);
 
     %% Create output folder if it does not exist
