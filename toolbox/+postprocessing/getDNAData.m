@@ -1,8 +1,8 @@
-function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID, posId, tm, tp, spermCount, hoechstoffset)
+function [tm, tp, spermCount, nucleiCount] = getDNAData(db, dropletID, posId, tm, tp, spermCount, hoechstoffset)
 
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
-%   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
+%   nuclearData = getNuclearData(db, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
 %
 % This function constructs the filenames for the nuclear and DNA (Hoechst) data based on
 % the croppedImages directory, position, and droplet ID. It then loads the corresponding .mat
@@ -27,7 +27,7 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID
 %   nd = getNuclearData("exports/20250328_Nocodazole/cropped_pos0", 0, 5, "CFP", "DAPI", true);
 
     arguments
-        croppedImages (1,1) string
+        db
         dropletID (1,1) double
         posId   (1,1) double
         tm  table
@@ -40,8 +40,10 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID
     
     %% fileIO
     % Construct file names (using your naming convention).
-    dnaMaskFile = fullfile(croppedImages, sprintf("dna_%03d.mat", dropletID));
-    nuclearMaskFile = fullfile(croppedImages, sprintf("nuclear_%03d.mat", dropletID));
+    croppedImages = db.croppedImages;
+    maskMatFiles = db.maskMatFiles;
+    dnaMaskFile = fullfile(maskMatFiles, sprintf("dna_%03d.mat", dropletID));
+    nuclearMaskFile = fullfile(maskMatFiles, sprintf("nuclear_%03d.mat", dropletID));
     hoechstImgFiles = fullfile(croppedImages, sprintf("droplet_%03d/Pos%d_DAPI_???.tif", dropletID, posId));
 
     % Load mat files
@@ -58,6 +60,9 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID
         tm.SUM_SPERM_HOECHST_INT = NaN*ones(size(tm,1),1);
         tm.SUM_NUCLEUS_HOECHST_INT = NaN*ones(size(tm,1),1);
         tm.NPIXEL_DNA = NaN*ones(size(tm,1),1);
+        tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
+        tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
+    
         spermCount = NaN;
         nucleiCount = NaN;
         return
@@ -112,6 +117,8 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID
             tm.NUCLEI_COUNT = NaN*ones(size(tm,1),1);
             tm.NPIXEL_DNA = NaN*ones(size(tm,1),1);
             tm.NPIXEL_NUC = NaN*ones(size(tm,1),1);
+            tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
+            tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
             fprintf('- No colocalization');
         end
 
@@ -157,6 +164,8 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(croppedImages, dropletID
         tm.SUM_SPERM_HOECHST_INT = NaN*ones(size(tm,1),1);
         tm.SUM_NUCLEUS_HOECHST_INT = NaN*ones(size(tm,1),1);
         tm.NPIXEL_DNA = NaN*ones(size(tm,1),1);
+        tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
+        tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
         spermCount = NaN;
         nucleiCount = NaN;
     end    

@@ -1,4 +1,4 @@
-function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
+function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount)
 % getNuclearData Load nuclear and DNA quantification data for a droplet.
 %
 %   nuclearData = getNuclearData(croppedImages, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
@@ -23,7 +23,7 @@ function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp
 %   nd = getNuclearData("exports/20250328_Nocodazole/cropped_pos0", 0, 5, "CFP", "DAPI", true);
 
     arguments
-        croppedImages (1,1) string
+        db
         dropletID (1,1) double
         tm  table
         tp table
@@ -32,7 +32,9 @@ function [tm, tp, nucleiCount] = getNuclearData(croppedImages, dropletID, tm, tp
     end
 
     % Construct file names (using your naming convention).
-    nuclearMaskFile = fullfile(croppedImages, sprintf("nuclear_%03d.mat", dropletID));
+    croppedImages = db.croppedImages;
+    maskMatFilesPath = db.maskMatFiles;
+    nuclearMaskFile = fullfile(maskMatFilesPath, sprintf("nuclear_%03d.mat", dropletID));
     
     % Load mat files
     try

@@ -126,12 +126,15 @@ end
             try
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
                 % [tm_updated, tp_updated, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
-                [tm, tp, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
+                [tm, tp, nucleiCount] = postprocessing.getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                 
-                %fprintf(" - Nuclear mask obtained");
-            catch
-                %fprintf(" - Ignored. .mat file not found.\n");
+                fprintf(" - Nuclear mask obtained");
+            catch ME
                 fprintf(" - Failed. getNuclearData\n");
+                disp(ME.identifier);
+                %rethrow(ME);
+                %fprintf(" - Ignored. .mat file not found.\n");
+
                 continue;
             end
         else
@@ -145,14 +148,18 @@ end
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
                 % run detectMultiNuclei
                 % [tm_updated, tp_updated, spermCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm_updated, tp_updated, spermCount, hoechstoffset);
-                [tm, tp, spermCount, nucleiCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
+                [tm, tp, spermCount, nucleiCount] = postprocessing.getDNAData(db, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
                 
-            catch
-                %fprintf(" - Ignored. .mat file not found.\n");
+            catch ME
                 fprintf(" - Failed. getDNAData\n");
+                %fprintf(" - Ignored. .mat file not found.\n");
+                disp(ME.identifier);
+                %rethrow(ME);
+                
                 
                 continue;
             end
+
         else
             spermCount = NaN;
             fprintf(" - No DNA staining -");

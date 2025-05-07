@@ -33,6 +33,9 @@ arguments
     overwriteDNAInfo logical
 end
 
+% Prepare a folder for output masks
+mkdir(db.maskMatFiles);
+
 % Process only subdirectories (skip '.' and '..') List of cropped droplets
 subdirs = dir(db.croppedImages);
 subdirs = subdirs([subdirs(:).isdir]);
@@ -49,8 +52,8 @@ for j = 1:length(subdirs)
         sprintf("Pos%d_label_???.tif", db.posId));
 
     % Construct the output file names for the segmentation results.
-    nuclearMaskFile = fullfile(db.croppedImages, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "nuclear")));
-    dnaMaskFile = fullfile(db.croppedImages, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "dna")));
+    nuclearMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "nuclear")));
+    dnaMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "dna")));
 
     % Process nuclear segmentation if requested.
     if overwriteNucMask

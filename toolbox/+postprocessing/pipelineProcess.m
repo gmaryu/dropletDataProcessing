@@ -88,8 +88,8 @@ arguments
 end
 
 % Loop through each database entry and process only the selected positions.
-parfor i = 1:length(database)
-%for i = 1:length(database)
+%parfor i = 1:length(database)
+for i = 1:length(database)
 
     db = database{i};
     if ismember(db.posId, totalPositions)
