@@ -55,9 +55,10 @@ function createTestData(srcFolder, destRoot, posVec, frameVec, colorSet)
                         srcFile = fullfile(srcFolder, sprintf('Pos%d', p), files(k).name);
                         destFile = fullfile(destFolder, files(k).name);
                         copyfile(srcFile, destFile);
-                        fprintf('Copied file: %s\n', files(k).name);
+                        %fprintf('Copied file: %s\n', files(k).name);
                     end
                 end
             end
+            fprintf('Copied files for Position: %d\n', p);
         end
     end

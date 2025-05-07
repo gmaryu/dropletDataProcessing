@@ -50,6 +50,7 @@ function database = genDatabase(exportsPath)
             entry.croppedImages      = fullfile(exportsPath, sprintf('singleDroplet/cropped_%s', posName));
             entry.spermCountCsv      = fullfile(exportsPath, sprintf('spermcount_%s.csv', posName));
             entry.forceIgnoreCsv     = fullfile(exportsPath, 'force_ignore.csv');
+            entry.maskMatFiles       = fullfile(exportsPath, sprintf('maskMatFiles/%s', posName));
 
             database{i} = entry;
         else
