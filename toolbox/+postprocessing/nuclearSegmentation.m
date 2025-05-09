@@ -60,7 +60,7 @@ for j = 1:length(subdirs)
         fprintf("Processing nuclear mask for %s of Pos %d...\n", subdirs(j).name, db.posId);
         try
             % Call the cropping/segmentation routine.
-             [nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
+            [nuclearArea, idxToFrameNuc] = postprocessing.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
             fprintf("Nuclear mask obtained.\n");
         catch ME
             fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);

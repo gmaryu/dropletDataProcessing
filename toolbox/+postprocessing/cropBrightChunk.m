@@ -35,7 +35,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     smallCcThres = 0.0005;
     gfitMaxStdFactor = 10;
     intensityThresFactor = 1.5;
-    
+
     %% fileIO and image2stack
     fs = dir(files);
     N = length(fs);
@@ -52,6 +52,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     imgroot = fs(1).folder;
     lblroot = ls(1).folder;
     rawImages = cell(1, N);
+
     for i = 1:N
         % raw image stack
         rawImages{i} = imread(fullfile(imgroot, fs(i).name));
@@ -71,12 +72,13 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         end
         %}
     end
-    
+
     try
         % multi-cell to 3-dimensional matrix 
         rawImagesCat = cat(3, rawImages{:});
         labelImageCat = cat(3, labelImage{:});
     catch
+        fprintf('Size of cropped images are not consistent')
         nuclearArea = [];
         idxToFrame = [];
         return;

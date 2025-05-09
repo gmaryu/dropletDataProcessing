@@ -127,11 +127,10 @@ end
                 % (Assume nuclearQuantification already processes the necessary .mat files.)
                 % [tm_updated, tp_updated, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                 [tm, tp, nucleiCount] = postprocessing.getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
-                
-                fprintf(" - Nuclear mask obtained");
-            catch ME
-                fprintf(" - Failed. getNuclearData\n");
-                disp(ME.identifier);
+               
+            catch
+                %fprintf(" - Failed. getNuclearData\n");
+                %disp(ME.identifier);
                 %rethrow(ME);
                 %fprintf(" - Ignored. .mat file not found.\n");
 

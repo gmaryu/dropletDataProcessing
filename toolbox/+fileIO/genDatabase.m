@@ -51,11 +51,12 @@ function database = genDatabase(exportsPath)
             entry.spermCountCsv      = fullfile(exportsPath, sprintf('spermcount_%s.csv', posName));
             entry.forceIgnoreCsv     = fullfile(exportsPath, 'force_ignore.csv');
             entry.maskMatFiles       = fullfile(exportsPath, sprintf('maskMatFiles/%s', posName));
-
+            entry.labels             = fullfile(exportsPath, sprintf('labels/%s', posName));
             database{i} = entry;
         else
             warning('Filename "%s" did not match the expected pattern.', name);
         end
+        
     end
 
 end

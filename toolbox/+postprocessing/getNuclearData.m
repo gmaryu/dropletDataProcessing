@@ -40,7 +40,7 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
     try
         nucData = load(nuclearMaskFile);
     catch ME
-        error("Failed to load nuclear data: %s", ME.message);
+        fprintf(' ! getNuclearData [%s] %s\n', ME.identifier, ME.message);
     end
     
     nuclearData.nuclearArea = nucData.nuclearArea; % Vector of 1 x timepoints

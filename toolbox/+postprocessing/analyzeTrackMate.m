@@ -61,19 +61,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     for i = 1:length(ids)
 
         track = sortrows(trackMate(trackMate.TRACK_ID == ids(i), :), "FRAME");
-        
-        % Filter tracks with abnormal area variations.
-        areaAnomaly = abs((track.AREA - median(track.AREA)) / median(track.AREA));
-        if sum(areaAnomaly > 0.05) > 0.01 * numel(areaAnomaly)
-            validIdx = areaAnomaly < 0.05;
-            origLen = height(track);
-            track = track(validIdx, :);
-            if height(track) < 0.8 * origLen
-                fprintf("ID:%d - Area anomaly (%.3f, %.3f, %d)\n", ids(i), median(areaAnomaly), std(areaAnomaly), sum(areaAnomaly > 0.1));
-                continue;
-            end
-        end
-        
+                
         t = track.FRAME;
         preIgnored = forceIgnore.DropID(forceIgnore.PosID == target_position);
         if ~ismember(ids(i), preIgnored)
@@ -104,7 +92,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
             cnt = cnt + 1;
             %fprintf("\n");
         else
-            fprintf("ID:%d - found in force_ignored \n", ids(i));
+            %fprintf("ID:%d - found in force_ignored \n", ids(i));
         end
     end
     fprintf("%d / %d droplets with valid signals\n", cnt, length(ids));
