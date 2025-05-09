@@ -111,15 +111,15 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
 
         % Extract droplet IDs and positions (converted to pixel coordinates).
         ids = frameData.TRACK_ID;
-        x = round(frameData.POSITION_X / dx);
-        y = round(frameData.POSITION_Y / dx);
+        col = round(frameData.POSITION_X / dx) + 1;
+        row = round(frameData.POSITION_Y / dx) + 1;
 
         % Loop over each channel.
         for channelIdx = 1:length(imageNameFormats)
             % Read the full frame image for the given channel.
             imagePath = fullfile(pathDatabase, sprintf(imageNameFormats(channelIdx), frame));
-            fullImage = imread(imagePath)';
-            [maxX, maxY] = size(fullImage);
+            fullImage = imread(imagePath);
+            [maxC, maxR] = size(fullImage);
 
             % Process each droplet in the current frame.
             for dropletIdx = 1:length(ids)
@@ -127,12 +127,12 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
                 % Determine crop radius for the droplet.
                 r = maxRadiusLookupTable(id + 1);
                 % Define crop boundaries ensuring they are within the image dimensions.
-                xStart = max(x(dropletIdx) - r, 1);
-                xEnd   = min(x(dropletIdx) + r, maxX);
-                yStart = max(y(dropletIdx) - r, 1);
-                yEnd   = min(y(dropletIdx) + r, maxY);
-                croppedImage = fullImage(xStart:xEnd, yStart:yEnd);
-
+                colStart = max(col(dropletIdx) - r, 1);
+                colEnd   = min(col(dropletIdx) + r, maxC);
+                rowStart = max(row(dropletIdx) - r, 1);
+                rowEnd   = min(row(dropletIdx) + r, maxR);
+                %croppedImage = fullImage(colStart:colEnd, rowStart:rowEnd);
+                croppedImage = fullImage(rowStart:rowEnd, colStart:colEnd);
                 % Create subfolder for the droplet if it doesn't exist.
                 dropletDir = fullfile(pathOutput, sprintf("droplet_%03d", id));
                 if ~exist(dropletDir, "dir")
@@ -155,23 +155,24 @@ function cropDroplet(trackmateOutput, pathDatabase, ignoreFile, labelPath, pathO
             fprintf('Label Not Found. Time or labelNameFromat might be different.')
             return
         else
-            fullLabel = imread(labelimagePath)';
+            fullLabel = imread(labelimagePath);
             fullLabel = imdilate(fullLabel, se);
-            [maxX, maxY] = size(fullLabel);
+            [maxC, maxR] = size(fullLabel);
         end
         
         % Process each droplet in the current frame.
         for dropletIdx = 1:length(ids)
             id = ids(dropletIdx);
-            labelid = fullLabel(x(dropletIdx),y(dropletIdx));
+            labelid = fullLabel(row(dropletIdx),col(dropletIdx));
             % Determine crop radius for the droplet.
             r = maxRadiusLookupTable(id + 1);
             % Define crop boundaries ensuring they are within the image dimensions.
-            xStart = max(x(dropletIdx) - r, 1);
-            xEnd   = min(x(dropletIdx) + r, maxX);
-            yStart = max(y(dropletIdx) - r, 1);
-            yEnd   = min(y(dropletIdx) + r, maxY);
-            croppedLabel = fullLabel(xStart:xEnd, yStart:yEnd);
+            colStart = max(col(dropletIdx) - r, 1);
+            colEnd   = min(col(dropletIdx) + r, maxC);
+            rowStart = max(row(dropletIdx) - r, 1);
+            rowEnd   = min(row(dropletIdx) + r, maxR);
+            %croppedLabel = fullLabel(colStart:colEnd, rowStart:rowEnd);
+            croppedLabel = fullLabel(rowStart:rowEnd, colStart:colEnd);
             croppedLabel(croppedLabel ~= labelid) = 0;
 
             % Save the cropped image with an appropriate file name.
