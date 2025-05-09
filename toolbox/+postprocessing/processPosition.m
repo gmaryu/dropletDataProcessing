@@ -119,7 +119,7 @@ end
         % Here we call nuclearQuantification on just this position to segment nuclei and DNA.
         % cropBrightChunk
         % cropDNAMask
-        postprocessing.nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
+        segmentation.nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
     end
     
 
