@@ -19,13 +19,16 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 # === Folder setup ===
-inputFolder = File("E:/MATAB_NC_project/test_Sperm2") ## Defined by User
-outputFolder = File("E:/MATAB_NC_project/exports/" + inputFolder.getName())  ## Defined by User
+inputFolder = File("E:\MATLAB_NC_project/exports/20250313_Chk1i_Sperm") ## Defined by User
+outputFolder = File("E:\MATLAB_NC_project/exports/" + inputFolder.getName())  ## Defined by User
+
 if not outputFolder.exists():
     outputFolder.mkdirs()
+    
 
 # === Batch process each TIF ===
 fileList = inputFolder.listFiles()
+print(inputFolder)
 for f in fileList:
     if not f.getName().lower().endswith(".tif"):
         continue
@@ -63,7 +66,7 @@ for f in fileList:
     settings.addSpotFilter(FeatureFilter('QUALITY', 100.0, True))
     settings.addSpotFilter(FeatureFilter("CIRCULARITY", 0.85, True))
     settings.addSpotFilter(FeatureFilter("SOLIDITY", 0.9, True))
-    settings.addSpotFilter(FeatureFilter("RADIUS", 40.0, True))
+    settings.addSpotFilter(FeatureFilter("RADIUS", 30.0, True))
     settings.addSpotFilter(FeatureFilter("RADIUS", 120.0, False))
 
     # Tracker (unit for distance is micron)
