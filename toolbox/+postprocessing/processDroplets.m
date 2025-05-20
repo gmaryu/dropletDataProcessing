@@ -180,7 +180,11 @@ end
         
         fprintf(" - \n");
     end
-    
-    % Convert droplet info into a table with appropriate variable names.
-    dropletInfo = array2table(dropletInfoRows, 'VariableNames', {'TRACK_ID','NUCLEI_COUNT','SPERM_COUNT','CYCLE_NUMBER','MEDIAN_DIAMETER'});
+
+    if ~isempty(dropletInfoRows)
+        % Convert droplet info into a table with appropriate variable names.
+        dropletInfo = array2table(dropletInfoRows, 'VariableNames', {'TRACK_ID','NUCLEI_COUNT','SPERM_COUNT','CYCLE_NUMBER','MEDIAN_DIAMETER'});
+    else
+        dropletInfo = array2table(zeros(0,5), 'VariableNames', {'TRACK_ID','NUCLEI_COUNT','SPERM_COUNT','CYCLE_NUMBER','MEDIAN_DIAMETER'});
+    end
 end
