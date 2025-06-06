@@ -1,12 +1,12 @@
-function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound)
+function data = mergeDatabase(output_database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound)
     % Initialize empty tables for final merged data.
     mergedInfo = table();
     mergedTimeSeries = table();
     mergedCycle = table();
     mergednoOsci = table();
     
-    for i = 1:length(database)
-        db = database{i};
+    for i = 1:length(output_database)
+        db = output_database{i};
         if ismember(db.posId, totalPositions)
             if ~isempty(db.info)
                 %posInfo = array2table(db.posId * ones(height(db.info),1), 'VariableNames', {'POS_ID'});
@@ -19,6 +19,7 @@ function data = mergeDatabase(database, totalPositions, frameToMin, pixelToUm, i
                     mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
                 end
             else
+                mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
                 fprintf('No oscillations in Position %d.\n',db.posId);
             end
         end

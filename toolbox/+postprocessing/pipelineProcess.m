@@ -1,4 +1,4 @@
-function data = pipelineProcess(database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
+function data = pipelineProcess(file_database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
                                 spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
                                 automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator)
 % pipelineProcess  Run the full analysis pipeline across multiple positions.
@@ -69,7 +69,7 @@ function data = pipelineProcess(database, totalPositions, frameToMin, pixelToUm,
 
 
 arguments
-    database            cell
+    file_database            cell
     totalPositions      {mustBeNumericOrLogical}
     frameToMin          double
     pixelToUm           double
@@ -86,20 +86,21 @@ arguments
     FRETNumerator string
     FRETDenominator string
 end
-
+output_database = {};
 % Loop through each database entry and process only the selected positions.
 %parfor i = 1:length(database)
-for i = 1:length(database)
+for i = 1:length(file_database)
 
-    db = database{i};
+    db = file_database{i};
+
     if ismember(db.posId, totalPositions)
-        db = postprocessing.processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
+        data_output = postprocessing.processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
             spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
             automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator);
-        database{i} = db; % Update the database entry
+        output_database{i} = data_output; % Update the database entry
     end
 end
 
 % Merge results across positions into final data structure.
-data = postprocessing.mergeDatabase(database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound);
+data = postprocessing.mergeDatabase(output_database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound);
 end

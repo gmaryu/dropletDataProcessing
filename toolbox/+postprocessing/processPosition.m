@@ -1,4 +1,4 @@
-function db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
+function data_output = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
                               spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
                               automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator)
 % processPosition Process signal quantification and segmentation data for a single experimental position.
@@ -130,15 +130,17 @@ end
             pixelToUm, initialPeakTimeBound, forceIgnore, spermCondition, hoechstCondition, automaticNucleiCount, hoechstoffset);
 
         % Save results into the database.
-        db.info = [array2table(db.posId * ones(height(dropletInfo),1), 'VariableNames', {'POS_ID'}), dropletInfo];
-        db.timeSeries = timeSeriesData;
-        db.cycle = cycleData;
-        db.noOcillation = trackNoPeaks;
+        data_output.posId = db.posId;
+        data_output.info = [array2table(db.posId * ones(height(dropletInfo),1), 'VariableNames', {'POS_ID'}), dropletInfo];
+        data_output.timeSeries = timeSeriesData;
+        data_output.cycle = cycleData;
+        data_output.noOcillation = trackNoPeaks;
     else
-        db.info = [];
-        db.timeSeries = [];
-        db.cycle = [];
-        db.noOcillation = trackNoPeaks;
+        data_output.posId = db.posId;
+        data_output.info = [];
+        data_output.timeSeries = [];
+        data_output.cycle = [];
+        data_output.noOcillation = trackNoPeaks;
     end
     
     
