@@ -39,8 +39,13 @@ for p = 1:length(positions)
 
         % Save the figure as a PNG file. The -dpng flag tells MATLAB to create a PNG.
         % The -r300 flag sets the resolution to 300 dpi.
-        fn = sprintf('Pos%d_DropletID%d.png', pos,ids(i));
-        print(fullfile(savePath, fn), '-dpng', '-r300');
+        savePath_p = fullfile(savePath,sprintf('Pos%d',pos));
+        if ~exist(savePath_p, 'dir')
+            mkdir(savePath_p);
+        end
+        fn = sprintf('Pos%d_DropletID%03d.png', pos,ids(i));
+        %fn = sprintf('Pos%d_DropletID%d.png', pos,ids(i));
+        print(fullfile(savePath_p, fn), '-dpng', '-r300');
 
         % Close the figure to free up resources.
         close(f);

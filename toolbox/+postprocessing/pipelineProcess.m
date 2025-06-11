@@ -88,8 +88,8 @@ arguments
 end
 output_database = {};
 % Loop through each database entry and process only the selected positions.
-%parfor i = 1:length(database)
-for i = 1:length(file_database)
+parfor i = 1:length(file_database)
+%for i = 1:length(file_database)
 
     db = file_database{i};
 
@@ -98,6 +98,8 @@ for i = 1:length(file_database)
             spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
             automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator);
         output_database{i} = data_output; % Update the database entry
+    else
+        output_database{i}.posId = db.posId;
     end
 end
 
