@@ -49,13 +49,29 @@ function createTestData(srcFolder, destRoot, posVec, frameVec, colorSet)
                             p, pattern);
                         continue;
                     end
-                    
-                    % Copy matching files to the destination folder
-                    for k = 1:length(files)
-                        srcFile = fullfile(srcFolder, sprintf('Pos%d', p), files(k).name);
-                        destFile = fullfile(destFolder, files(k).name);
-                        copyfile(srcFile, destFile);
-                        %fprintf('Copied file: %s\n', files(k).name);
+                    srcFile = fullfile(srcFolder, sprintf('Pos%d', p), files(1).name);
+                    img = imread(srcFile);
+                    img_size = size(img);
+   
+                    if img_size(1) > 2000 % bin size 1x1
+                        %disp(img_size)
+                        for k = 1:length(files)
+                            srcFile = fullfile(srcFolder, sprintf('Pos%d', p), files(k).name);
+                            img = imread(srcFile);
+                            scale = 0.5;
+                            scaled_img = imresize(img,scale);
+                            destFile = fullfile(destFolder, files(k).name);
+                            imwrite(scaled_img,destFile)
+                            %fprintf('Copied file: %s\n', files(k).name);
+                        end
+                    else % bin size 2x2
+                        % Copy matching files to the destination folder
+                        for k = 1:length(files)
+                            srcFile = fullfile(srcFolder, sprintf('Pos%d', p), files(k).name);
+                            destFile = fullfile(destFolder, files(k).name);
+                            copyfile(srcFile, destFile);
+                            %fprintf('Copied file: %s\n', files(k).name);
+                        end
                     end
                 end
             end
