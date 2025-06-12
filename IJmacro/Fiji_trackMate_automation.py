@@ -21,10 +21,10 @@ sys.setdefaultencoding('utf-8')
 # === Folder setup ===
 inputFolder = File("E:\MATLAB_NC_project/exports/20250313_Chk1i_Sperm") ## Defined by User
 outputFolder = File("E:\MATLAB_NC_project/exports/" + inputFolder.getName())  ## Defined by User
+channelNum = 4; ## Defined by User
 
 if not outputFolder.exists():
-    outputFolder.mkdirs()
-    
+    outputFolder.mkdirs()    
 
 # === Batch process each TIF ===
 fileList = inputFolder.listFiles()
@@ -58,7 +58,7 @@ for f in fileList:
     settings.detectorFactory = LabelImageDetectorFactory()
     ## Defined by User -> ##
     settings.detectorSettings = {
-        'TARGET_CHANNEL': 6,
+        'TARGET_CHANNEL': channelNum + 1,  # Channel to analyze (1-based index)
         'SIMPLIFY_CONTOURS': True
     }
 
