@@ -2,14 +2,14 @@ import os
 from ij import IJ, ImagePlus, WindowManager
 
 data_path="//biop-qiongy-nas.biop.lsa.umich.edu/qiongy-data/users/Gembu/data/20250313_Chk1i"
-label_path="E:/MATLAB_NC_project/exports/20250313_Chk1i_Sperm/labels"
+label_path="E:/MATLAB_NC_project/exports/"+ os.path.basename(data_path) +"/labels"
 channel=5
 positions=[4,5,6,7,8,9,10,11,12,13,14,19,20,21,22,23,24,25,26,27]
 glassInner_um = 1000
 glassInner_px = 375
 time_range = [0,150]
 frame=time_range[1]-time_range[0]+1
-output_path = "E:/MATLAB_NC_project/exports/20250313_Chk1i_Sperm"
+output_path = "E:/MATLAB_NC_project/exports/"+ os.path.basename(data_path)
 
 for p in positions:
 	# load raw image
