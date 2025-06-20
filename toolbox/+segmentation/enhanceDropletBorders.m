@@ -27,9 +27,15 @@ function enhancedImage = enhanceDropletBorders(preProcessedBrightFieldImage, seg
     tooSmall = [p.Area] < (segmentationParameters.borderAreaThreshold * segmentationParameters.resolution ^ 2);
     tooSolid = [p.Solidity] > (segmentationParameters.borderSolidityThreshold);
     toRemove = tooSmall & tooSolid; 
+
     labels = bwlabel(binaryMask);
     filteredLabels = labels;
-    filteredLabels(vertcat(p(toRemove).PixelIdxList)) = 0;
-    selectedRegions = logical(filteredLabels);
-    enhancedImage = dropletBorders & selectedRegions;
+    if any(toRemove)
+        filteredLabels(vertcat(p(toRemove).PixelIdxList)) = 0;
+    end
+    
+    selectedRegions = filteredLabels > 0;
+    enhancedImage = (dropletBorders > 0) & selectedRegions;
+    %selectedRegions = logical(filteredLabels);
+    %enhancedImage = dropletBorders & selectedRegions;
 end
