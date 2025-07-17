@@ -40,6 +40,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     interphaseStartFrame = nan(nCycles, 1);
     interphaseEndFrame   = nan(nCycles, 1);
     areaPixelsMedian     = nan(nCycles, 1);
+    nucAreaIncRateCoeff  = nan(nCycles, 1);
     nucPixelsQ90         = nan(nCycles, 1);
     dnaSumIntQ90         = nan(nCycles, 1);
     dnaPixelsQ90         = nan(nCycles, 1);
@@ -68,7 +69,28 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         
         % Compute time vector in minutes.
         t = frameToMin * cycleData.FRAME;
+
+        % Collect sum of nuclear area
+        nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2;
+        valid = ~isnana(nucAreas);
+        t = t(valid);
+        nucAreas = nucAreas(t);
         
+        % Compute Nuclear Area increase rate via linear fitting if enough
+        % data points exist.
+        if numel(t) > 5
+            p = polyfit(t, nucAreas, 1);
+            if p(1) > 0
+                nucAreaIncRateCoeff(k) = p(1);
+            else
+                nucAreaIncRateCoeff(k) = nan;
+            end
+        else
+            nucAreaIncRateCoeff(k) = nan;
+        end
+
+        
+        % Collect sum of hoecsht
         if spermCondition && ismember('SUM_SPERM_HOECHST_INT', cycleData.Properties.VariableNames)
             hoechst = cycleData.SUM_SPERM_HOECHST_INT;
             valid = ~isnan(hoechst);
@@ -77,7 +99,6 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         else
             hoechst = zeros(size(cycleData.FRAME));
         end
-        
         % Compute DNA increase rate via linear fitting if enough data points exist.
         if numel(t) > 5
             p = polyfit(t, hoechst, 1);
@@ -118,6 +139,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     tp.DNA_SUM_INT_Q90 = dnaSumIntQ90;
     tp.DNA_NPIXELS_Q90 = dnaPixelsQ90;
     tp.DNA_INC_RATE_COEFF = dnaIncRateCoeff;
+    tp.NUC_INC_RATE_COEFF = nucAreaIncRateCoeff;
     
     tp_updated = tp;
     
@@ -129,4 +151,5 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     cycleMetrics.dnaSumIntQ90 = dnaSumIntQ90;
     cycleMetrics.dnaPixelsQ90 = dnaPixelsQ90;
     cycleMetrics.dnaIncRateCoeff = dnaIncRateCoeff;
+    cycleMetrics.nucAreaIncRateCoeff = nucAreaIncRateCoeff;
 end
