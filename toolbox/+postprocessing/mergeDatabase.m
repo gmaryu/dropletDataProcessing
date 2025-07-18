@@ -19,7 +19,9 @@ function data = mergeDatabase(output_database, totalPositions, frameToMin, pixel
                     mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
                 end
             else
-                mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
+                if height(db.noOcillation) > 0
+                    mergednoOsci = [mergednoOsci; [array2table(db.posId * ones(height(db.noOcillation),1), 'VariableNames', {'POS_ID'}), db.noOcillation]];
+                end
                 fprintf('No oscillations in Position %d.\n',db.posId);
             end
         end

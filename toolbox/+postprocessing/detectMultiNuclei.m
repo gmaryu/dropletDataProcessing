@@ -1,10 +1,5 @@
 function [maxObjCount, objCountSeries] = detectMultiNuclei(maskMat)
 %% test mode
-saveMultiNuc = false;
-savePath = 'E:\MATAB_NC_project\exports\test_sperm/multiNuc';
-if ~exist(savePath, 'dir')
-    mkdir(savePath);
-end
 %%
     thresframe = 10;
     cnt = 0;
