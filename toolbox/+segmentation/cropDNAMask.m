@@ -34,7 +34,21 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
     end
 
     %% parameters
-    bwareaopenthresh = 15;
+    opts = struct;
+    opts.tophatR     = 8;
+    opts.stdThresh   = 0.004;
+    opts.ratioThresh = 2;
+    opts.minArea     = 5;
+    opts.maxSpots    = 5;
+
+    R      = getfield(opts, 'tophatR');
+    stdT   = getfield(opts, 'stdThresh');
+    ratT   = getfield(opts, 'ratioThresh');
+    minA   = getfield(opts, 'minArea');
+    maxN   = getfield(opts, 'maxSpots');
+    %dbg    = getfield(opts, 'showDebug');
+    
+    bwareaopenthresh = minA;
 
     %% fileIO
     % Load nuclear segmentation results. All droplets have nuclear mask.
@@ -104,60 +118,105 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
         end
 
         maskedImages = uint16(labelImageCat) .* rawImagesCat;
-        
-        %% skewness values of intensity histogram for each frame
-        % The skewness of the histogram changes with the degree of DNA condensation.
-        skewVec = zeros(N,1);
-        for t = 1:N
-            I = double(maskedImages(:,:,t));
 
-            se = strel('disk', 20);
-            I_tophat = imtophat(I, se);
+        for i=1:N
+            % ----------- 1. robust normalisation -------------------------------------
+            img  = double(maskedImages(:,:,i));
+            medI = median(img(:));
+            madI = mad(img(:),1);                     % robust σ̂
+            imgZ = (img - medI) / max(madI, eps);     % (≈ z-score)
+            imgN = rescale(imgZ, 0, 1);               % to [0,1] for thresholding
+
+            % Global contrast gate (skip unmistakably empty frames fast)
+            if madI/ max(img(:)) < stdT
+                BW = false(size(img));  return;  end
+            if prctile(imgN(:),99) / max(prctile(imgN(:),33),eps) < ratT
+                BW = false(size(img));  return;  end
+
+            % ----------- 2. background suppression (white top-hat) -------------------
+            se   = strel('disk', R);
+            toph = imtophat(imgN, se);        % emphasise objects of ~size R
+
+            % ----------- 3. Otsu threshold & area filtering --------------------------
+            level  = graythresh(toph);
+            %level  = multithresh(toph,3);
+            BWc    = imbinarize(toph, level);
+            BW     = bwareaopen(BWc, minA);   % remove crumbs < minA pixels
             
-            mask = I_tophat > 0;
-            pix = I(mask);
-
-            skewVec(t) = skewness(double(pix));
-        end
-        smoothSkew = movmean(skewVec, [1 1]);
-
-
-        %% Process each frame to segment nucleus.
-        for i = 1:N
-            currentImage = double(maskedImages(:,:,i));
-            % background cleaning 
-            se = strel('disk', 20);
-            I_tophat = imtophat(currentImage, se);
-            I_tophat_NaN = I_tophat;
-            I_tophat_NaN(I_tophat==0) = NaN;
-
-            % pixel information of NaN
-            pix = I_tophat_NaN(~isnan(I_tophat_NaN));
-
-            if smoothSkew(i) > median(skewVec) || smoothSkew(i) > 4
-                % detect outlier pixels in very skewed intensity histogram
-                tf = isoutlier(pix,'quartiles');
-                outlierMask = false(size(I));
-                outlierMask(~isnan(I_tophat_NaN)) = tf;
-                BW = outlierMask;
-
-            else
-                % percentile scaling in modarate skewed intensity histogam
-                p1 = prctile(I_tophat_NaN(:), 1);
-                p90= prctile(I_tophat_NaN(:), 90);
-                %p1_series = [p1_series, p1];
-                %p90_series = [p90_series, p90];
-                I_norm = imadjust(I_tophat/max(I_tophat(:)), [p1 p90]/max(I_tophat(:)), [0 1]);
-                BW = imbinarize(I_norm);
-                
+            if isempty(BW)
+                %level  = graythresh(toph);
+                level  = multithresh(toph,3);
+                BWc    = imbinarize(toph, level(1));
+                BW     = bwareaopen(BWc, minA);   % remove crumbs < minA pixels
             end
 
-            % data cleaning
-            % 1) labeling
-            CC = bwconncomp(BW);
+            % ----------- 4. enforce “1–3 objects” rule -------------------------------
+            CC = bwconncomp(BW, 8);
+            if CC.NumObjects==0 || CC.NumObjects>maxN
+                BW = false(size(img));        % treat as “no valid bright object”
+            else
+                % (Optional) keep only the largest ‘maxN’ components
+                sizes  = cellfun(@numel, CC.PixelIdxList);
+                [~,ix] = sort(sizes,'descend');
+                keep   = ix(1:min(maxN, numel(ix)));
+                BW = false(size(img));
+                BW(cat(1,CC.PixelIdxList{keep})) = true;
+            end
+
+        
+        % %% skewness values of intensity histogram for each frame
+        % % The skewness of the histogram changes with the degree of DNA condensation.
+        % skewVec = zeros(N,1);
+        % for t = 1:N
+        %     I = double(maskedImages(:,:,t));
+        % 
+        %     se = strel('disk', 20);
+        %     I_tophat = imtophat(I, se);
+        % 
+        %     mask = I_tophat > 0;
+        %     pix = I(mask);
+        % 
+        %     skewVec(t) = skewness(double(pix));
+        % end
+        % smoothSkew = movmean(skewVec, [1 1]);
+        % 
+        % 
+        % %% Process each frame to segment nucleus.
+        % for i = 1:N
+        %     currentImage = double(maskedImages(:,:,i));
+        %     % background cleaning 
+        %     se = strel('disk', 20);
+        %     I_tophat = imtophat(currentImage, se);
+        %     I_tophat_NaN = I_tophat;
+        %     I_tophat_NaN(I_tophat==0) = NaN;
+        % 
+        %     % pixel information of NaN
+        %     pix = I_tophat_NaN(~isnan(I_tophat_NaN));
+        % 
+        %     if smoothSkew(i) > median(skewVec) || smoothSkew(i) > 4
+        %         % detect outlier pixels in very skewed intensity histogram
+        %         tf = isoutlier(pix,'quartiles');
+        %         outlierMask = false(size(I));
+        %         outlierMask(~isnan(I_tophat_NaN)) = tf;
+        %         BW = outlierMask;
+        % 
+        %     else
+        %         % percentile scaling in modarate skewed intensity histogam
+        %         p1 = prctile(I_tophat_NaN(:), 1);
+        %         p90= prctile(I_tophat_NaN(:), 90);
+        %         %p1_series = [p1_series, p1];
+        %         %p90_series = [p90_series, p90];
+        %         I_norm = imadjust(I_tophat/max(I_tophat(:)), [p1 p90]/max(I_tophat(:)), [0 1]);
+        %         BW = imbinarize(I_norm);
+        % 
+        %     end
+        % 
+        %     % data cleaning
+        %     % 1) labeling
+        %     CC = bwconncomp(BW);
 
             % 2) calculation of detected object stats
-            stats = regionprops(CC, 'Area', 'Eccentricity', 'Solidity', 'PixelIdxList');
+            stats = regionprops(BW, 'Area', 'Eccentricity', 'Solidity', 'PixelIdxList');
 
             % 3) filtering parameters
             eccThresh = 0.95;
@@ -174,7 +233,7 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
                 % 1-pixel dilation
                 regionDilated = imdilate(regionMask, strel('disk',1));
                 % if dialated area is overllaped with outer region of dropletMask -> true
-                touchesEdge = any( regionDilated(:) & ~I(:) );
+                touchesEdge = any( regionDilated(:) & ~img(:) );
 
                 if badShape && touchesEdge
                     toRemove(h) = true;
@@ -182,7 +241,7 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
 
                 % detected reagion is too large ignore the area (0.2 based on
                 % maximum area nucleus is ~10% of droplet area)
-                d_area = sum(I(:)>0);
+                d_area = sum(img(:)>0);
                 if stats(h).Area > d_area * 0.33
                     toRemove(h) = true;
                 end
