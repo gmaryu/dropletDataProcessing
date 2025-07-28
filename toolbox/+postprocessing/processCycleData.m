@@ -11,6 +11,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
 %   - DNA_SUM_INT_Q90: 90th percentile of Hoechst intensity,
 %   - DNA_NPIXELS_Q90: 90th percentile of DNA pixel counts,
 %   - DNA_INC_RATE_COEFF: the coefficient (log10) from a linear fit of Hoechst intensity.
+%   - NUC_INC_RATE_COEFF: the coefficient from a linear fit of nuclear area
+%   increase rate during interphase
 %
 % Inputs:
 %   tp             - Table with cycle definitions (must contain fields START_INDEX, END_INDEX, FRAME, etc.).
@@ -47,15 +49,15 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     dnaIncRateCoeff      = nan(nCycles, 1);
     
     for k = 1:nCycles
-        startidx = tp.START_INDEX(k);
-        endidx = tp.END_INDEX(k);
-        cycleData = tm(startidx:endidx-1, :);
+        startidx = tp.START_INDEX(k);       % start index information in peak table for the droplet of interest
+        endidx = tp.END_INDEX(k);           % end index information in peak table for the dropelt of interest
+        cycleData = tm(startidx:endidx-1, :); % time series for the specific cycle
         
         if spermCondition && ismember('NPIXEL_NUC', cycleData.Properties.VariableNames)
-            intstart = find(cycleData.NPIXEL_NUC > 0, 1);
+            intstart = find(cycleData.NPIXEL_NUC > 0, 1);       % interphase start index in time series data
             revIdx = find(flipud(cycleData.NPIXEL_NUC > 0), 1);
             if ~isempty(revIdx)
-                intend = height(cycleData) - revIdx + 1;
+                intend = height(cycleData) - revIdx + 1;        % interphase end index in time series data
             else
                 intend = [];
             end
@@ -65,16 +67,16 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         end
         
         % Compute median area (convert to µm²).
-        areaPixelsMedian(k) = median(cycleData.AREA / pixelToUm^2);
+        areaPixelsMedian(k) = median(cycleData.AREA / pixelToUm^2); % median droplet size
         
         % Compute time vector in minutes.
         t = frameToMin * cycleData.FRAME;
 
         % Collect sum of nuclear area
-        nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2;
-        valid = ~isnana(nucAreas);
-        t = t(valid);
-        nucAreas = nucAreas(t);
+        nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2; % time course of nuclear area
+        %valid = ~isnan(nucAreas);
+        t = t(intstart:intend);
+        nucAreas = nucAreas(intstart:intend);
         
         % Compute Nuclear Area increase rate via linear fitting if enough
         % data points exist.
