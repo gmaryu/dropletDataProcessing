@@ -15,13 +15,16 @@ if ~isfield(retv, 'NUC_INC_RATE_COEFF')
     for k = 1:nCycles
         posid = tp.POS_ID(k);
         trackid = tp.TRACK_ID(k);
-        startidx = tp.INTERPHASE_START_FRAME(k);
-        endidx = tp.INTERPHASE_END_FRAME(k);
-        tmp_time = startidx:endidx;
+                
         tmp_tm = tm(bitand(tm.POS_ID==posid, tm.TRACK_ID==trackid),:);
-        if bitand(tp.POS_ID==10, tp.TRACK_ID==77)
-            disp('stop')
+        startidx = find(tmp_tm.FRAME == tp.INTERPHASE_START_FRAME(k));
+        endidx = find(tmp_tm.FRAME == tp.INTERPHASE_END_FRAME(k));
+        tmp_time = startidx:endidx;
+
+        if k == 1651
+            disp(k);
         end
+        
         if ~isnan(tmp_time)
             cycleData = tmp_tm(tmp_time, :);
 
