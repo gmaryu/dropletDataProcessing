@@ -20,10 +20,6 @@ if ~isfield(retv, 'NUC_INC_RATE_COEFF')
         startidx = find(tmp_tm.FRAME == tp.INTERPHASE_START_FRAME(k));
         endidx = find(tmp_tm.FRAME == tp.INTERPHASE_END_FRAME(k));
         tmp_time = startidx:endidx;
-
-        if k == 1651
-            disp(k);
-        end
         
         if ~isnan(tmp_time)
             cycleData = tmp_tm(tmp_time, :);
