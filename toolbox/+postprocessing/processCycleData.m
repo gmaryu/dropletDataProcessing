@@ -70,11 +70,12 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         areaPixelsMedian(k) = median(cycleData.AREA / pixelToUm^2); % median droplet size
         
         % Compute time vector in minutes.
-        t = frameToMin * cycleData.FRAME;
+        %t = frameToMin * cycleData.FRAME;
 
         % Collect sum of nuclear area
         nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2; % time course of nuclear area
         %valid = ~isnan(nucAreas);
+        t = frameToMin * cycleData.FRAME;
         t = t(intstart:intend);
         nucAreas = nucAreas(intstart:intend);
         
@@ -96,6 +97,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         if spermCondition && ismember('SUM_SPERM_HOECHST_INT', cycleData.Properties.VariableNames)
             hoechst = cycleData.SUM_SPERM_HOECHST_INT;
             valid = ~isnan(hoechst);
+            t = frameToMin * cycleData.FRAME;
             t = t(valid);
             hoechst = hoechst(valid);
         else
