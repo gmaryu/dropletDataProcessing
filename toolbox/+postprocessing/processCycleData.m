@@ -30,9 +30,9 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
 %   [tp_updated, metrics] = postprocessing.processCycleData(tp, tm, 6, 2.649, true);
 
     arguments
-        tp table
-        tm table
-        frameToMin (1,1) double {mustBePositive}
+        tp table                                    % peak table for the droplet of interest
+        tm table                                    % time series table for the droplet of interest
+        frameToMin (1,1) double {mustBePositive}    
         pixelToUm (1,1) double {mustBePositive}
         spermCondition logical
     end
@@ -61,6 +61,27 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             else
                 intend = [];
             end
+
+            % Collect sum of nuclear area
+            nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2; % time course of nuclear area
+            %valid = ~isnan(nucAreas);
+            t = frameToMin * cycleData.FRAME;
+            t = t(intstart:intend);
+            nucAreas = nucAreas(intstart:intend);
+
+            % Compute Nuclear Area increase rate via linear fitting if enough
+            % data points exist.
+            if numel(t) > 5
+                p = polyfit(t, nucAreas, 1);
+                if p(1) > 0
+                    nucAreaIncRateCoeff(k) = p(1);
+                else
+                    nucAreaIncRateCoeff(k) = nan;
+                end
+            else
+                nucAreaIncRateCoeff(k) = nan;
+            end
+
         else
             intstart = [];
             intend = [];
@@ -71,27 +92,6 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         
         % Compute time vector in minutes.
         %t = frameToMin * cycleData.FRAME;
-
-        % Collect sum of nuclear area
-        nucAreas = cycleData.NPIXEL_NUC / pixelToUm^2; % time course of nuclear area
-        %valid = ~isnan(nucAreas);
-        t = frameToMin * cycleData.FRAME;
-        t = t(intstart:intend);
-        nucAreas = nucAreas(intstart:intend);
-        
-        % Compute Nuclear Area increase rate via linear fitting if enough
-        % data points exist.
-        if numel(t) > 5
-            p = polyfit(t, nucAreas, 1);
-            if p(1) > 0
-                nucAreaIncRateCoeff(k) = p(1);
-            else
-                nucAreaIncRateCoeff(k) = nan;
-            end
-        else
-            nucAreaIncRateCoeff(k) = nan;
-        end
-
         
         % Collect sum of hoecsht
         if spermCondition && ismember('SUM_SPERM_HOECHST_INT', cycleData.Properties.VariableNames)
@@ -100,19 +100,20 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             t = frameToMin * cycleData.FRAME;
             t = t(valid);
             hoechst = hoechst(valid);
-        else
-            hoechst = zeros(size(cycleData.FRAME));
-        end
-        % Compute DNA increase rate via linear fitting if enough data points exist.
-        if numel(t) > 5
-            p = polyfit(t, hoechst, 1);
-            if p(1) > 0
-                dnaIncRateCoeff(k) = log10(p(1));
+
+            % Compute DNA increase rate via linear fitting if enough data points exist.
+            if numel(t) > 5
+                p = polyfit(t, hoechst, 1);
+                if p(1) > 0
+                    dnaIncRateCoeff(k) = log10(p(1));
+                else
+                    dnaIncRateCoeff(k) = nan;
+                end
             else
                 dnaIncRateCoeff(k) = nan;
             end
         else
-            dnaIncRateCoeff(k) = nan;
+            hoechst = zeros(size(cycleData.FRAME));
         end
         
         if isempty(intstart)
