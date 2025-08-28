@@ -158,7 +158,7 @@ for g = 1:Ng
         % optional box overlay (hidden from legend)
         if opt.ShowBox
             boxchart(ax, x0*ones(size(yv)), yv, ...
-                'BoxFaceColor','w','BoxFaceAlpha',0.75, ...
+                'BoxFaceColor','k','BoxFaceAlpha',0.35, ...
                 'LineWidth',1,'MarkerStyle','none', ...
                 'HandleVisibility','off');
         end
@@ -178,7 +178,7 @@ set(ax,'XTick',1:Ncat);
 if isCatString, set(ax,'XTickLabel',allCats); end
 box(ax,'on'); grid(ax,'off'); ax.Layer = 'top';
 xlabel(ax,'Cycles');
-ylabel(ax, sprintf('%s (a.u.)', colName));   % label from columnName
+ylabel(ax, sprintf('%s (a.u.)', colName), 'Interpreter','none');   % label from columnName
 
 % legend with one entry per group
 legend(ax, groupLegendHandles(isgraphics(groupLegendHandles)), 'Location','bestoutside');

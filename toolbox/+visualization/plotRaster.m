@@ -20,13 +20,17 @@ function [props, peakMatrix] = plotRaster(dataSet, varargin)
     addParameter(p, 'Axes', [], @(ax) isempty(ax) || isa(ax,'matlab.graphics.axis.Axes'));
     addParameter(p, 'MarkerSize', 5, @(x)isnumeric(x) && isscalar(x) && x>0);
     addParameter(p, 'lineColor', 'k', @(c)ischar(c) || isstring(c) || (isnumeric(c) && numel(c)==3));
+    addParameter(p, 'newFig', true, @(x)islogical(x) || isnumeric(x));
     parse(p, dataSet, varargin{:});
 
+    % ---- Target Figure Pannel ----
+    newFig      = p.Results.newFig;
+    if newFig, f = figure; else, hold on; end
     line_option = logical(p.Results.line_option);
     ax          = p.Results.Axes;
     if isempty(ax), ax = gca; end
     msize       = p.Results.MarkerSize;
-    colorSpec   = p.Results.Color;
+    colorSpec   = p.Results.lineColor;
 
     % add IGNORED column in case tables doesn't have the column name
     % (accept all doplets info)
@@ -56,7 +60,7 @@ function [props, peakMatrix] = plotRaster(dataSet, varargin)
 
     % ---- Construct peak matrix ----
     for ppos = 1:numel(unique_pos)
-        tmp_cycle_pos = total_peaks(bitand(total_peaks.POS_ID == unique_pos(ppos), total_peaks.IGNORED == 0), :);
+        tmp_cycle_pos = total_peaks(total_peaks.POS_ID == unique_pos(ppos) & total_peaks.IGNORED == 0, :);
         tmp_info_pos  = info(info.POS_ID == unique_pos(ppos), :);
         unique_droplets = unique(tmp_cycle_pos.TRACK_ID);
 
@@ -117,7 +121,6 @@ function [props, peakMatrix] = plotRaster(dataSet, varargin)
     end
 
     % ---- Figure Properties for export ----
-    f = gcf;
     f.Units = 'centimeters';
     f.Position = [2,2,9,6];
 

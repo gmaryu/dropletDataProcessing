@@ -1,13 +1,14 @@
 function retv = calcCycleAdditionalFeatures(cycle, timeseries, FrameToMin, PixelToUm)
-dnarenormfactor = 1e7;
-% 1e7 factor to make numbers not to big
+dnarenormfactor = 1e7; % 1e7 factor to make numbers not too big
 
 retv = cycle;
 tp = cycle;
 tm = timeseries;
 
-if ~isfield(retv, 'NUC_INC_RATE_COEFF')
+if any(~isnan(retv.("NUC_NPIXELS_Q90"))) && any(~ismember(retv.Properties.VariableNames, 'NUC_INC_RATE_COEFF'))
+
     disp('Added a new field "NUC_INC_RATE_COEFF"');
+    
     % Collect sum of nuclear area
     nCycles = height(tp);
     nucAreaIncRateCoeff  = nan(nCycles, 1);
@@ -65,4 +66,5 @@ retv.DNACR = retv.DNA_SUM_INT_Q90 ./ visualization.convertAreaPixelsToVolume(ret
 retv.VOLUMEUM3 = visualization.convertAreaPixelsToVolume(retv.AREA_NPIXELS_MEDIAN, PixelToUm);
 retv.MARKERSIZE = (log10(visualization.convertAreaPixelsToVolume(retv.AREA_NPIXELS_MEDIAN, PixelToUm)) - 5.25) * 3; % log um3 volume roughly within 5-7
 retv.MARKERSIZE(retv.MARKERSIZE < 0.5, :) = 0.5;
+retv = visualization.foldChangeDNA(retv);
 end

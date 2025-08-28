@@ -12,6 +12,7 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
 %   'Color'       (char/str): Color for markers/lines (default: 'k')
    
     visualization.plotFiguresPreamble;
+    close all;
     
     % ---- Parse inputs ----
     p = inputParser;
@@ -19,9 +20,12 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
     addParameter(p, 'Axes', [], @(ax) isempty(ax) || isa(ax,'matlab.graphics.axis.Axes'));
     addParameter(p, 'MarkerSize', 8, @(x)isnumeric(x) && isscalar(x) && x>0);
     addParameter(p, 'Color', 'k', @(c)ischar(c) || isstring(c) || (isnumeric(c) && numel(c)==3));
+    addParameter(p, 'newFig', true, @(x)islogical(x) || isnumeric(x));
     parse(p, dataSet, varargin{:});
     
     % ---- Target Figure Pannel ----
+    newFig      = p.Results.newFig;
+    if newFig, f = figure; else, hold on; end
     ax          = p.Results.Axes;
     if isempty(ax), ax = gca; end
     msize       = p.Results.MarkerSize;
@@ -34,6 +38,11 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
         disp("IGNORED is temporally added to dataSet.Info");
         dataSet.info.IGNORED = zeros(size(dataSet.info,1),1);
     end
+
+    if ~ismember("IGNORED", dataSet.cycle.Properties.VariableNames)
+        disp("IGNORED is temporally added to dataSet.Info");
+        dataSet.cycle.IGNORED = zeros(size(dataSet.cycle,1),1);
+    end
     
     % Peak time collection
     idxCont = dataSet.info(dataSet.info.IGNORED == 0, :);
@@ -42,7 +51,8 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
     for i = 1:size(idxCont)
         pid = idxCont.POS_ID(i);
         did = idxCont.TRACK_ID(i);
-        pcycle = dataSet.cycle(bitand(dataSet.cycle.POS_ID == pid, dataSet.cycle.TRACK_ID == did), :);
+        pcycle = dataSet.cycle((dataSet.cycle.POS_ID == pid & dataSet.cycle.TRACK_ID == did & ...
+                    ~dataSet.cycle.IGNORED), :);
         peakTime = [pcycle.START_FRAME; pcycle.END_FRAME(end)]' * dataSet.FrameToMin;
         ptmCont(i, 1:length(peakTime)) = peakTime;
     end 
@@ -57,7 +67,6 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
         x = [x c*ones(1,size(plMat,1))];
         y = [y plMat(:,c)'];
     end
-    f = figure();
     swarmchart(x,y,msize,colorSpec);
     xlabel('Cycle Number');
     ylabel('Period length (min)');

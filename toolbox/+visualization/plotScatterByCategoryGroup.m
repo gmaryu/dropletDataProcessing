@@ -38,6 +38,7 @@ addParameter(p,'LowessSpan',0.25,@(x)isnumeric(x)&&isscalar(x)&&x>0&&x<=1);
 addParameter(p,'MarkerSize',8,@(x)isnumeric(x)&&isscalar(x)&&x>0);
 addParameter(p,'LegendLocation','bestoutside',@(s)ischar(s)||isstring(s));
 addParameter(p,'TileLayout','auto',@(v)(ischar(v)||isstring(v)) || (isnumeric(v)&&numel(v)==2));
+addParameter(p,'MaxCatNum',[],@(x)isnumeric(x)&&isscalar(x));
 parse(p,varargin{:});
 opt = p.Results;
 
@@ -47,6 +48,7 @@ if Ng==0, warning('groupData is empty.'); return; end
 xName   = string(opt.XVar);
 yName   = string(opt.YVar);
 catName = string(opt.CatVar);
+catNum = opt.MaxCatNum;
 ignName = string(opt.IgnoreVar);
 
 if strlength(xName)==0 || strlength(yName)==0
@@ -135,7 +137,11 @@ end
 if isCatString && ~iscell(allCats)
     allCats = cellstr(string(allCats));
 end
-Ncat = numel(allCats);
+if isempty(catNum)
+    Ncat = numel(allCats);
+else
+    Ncat = catNum;
+end
 if Ncat==0, warning('No categories to plot.'); return; end
 
 % ======================================================================
@@ -152,7 +158,11 @@ end
 
 f = figure; 
 f.Units = 'centimeters';
-f.Position = [0, 0, max(12, 4*nCols), max(10, 4*nRows)];  % simple sizing heuristic
+if nCols == 1
+    f.Position = [0, 0, 5, max(10, 4*nRows)];  % simple sizing heuristic
+else
+    f.Position = [0, 0, max(12, 4*nCols), max(10, 4*nRows)];  % simple sizing heuristic
+end
 t = tiledlayout(f, nRows, nCols, 'TileSpacing','compact', 'Padding','compact');
 
 % one legend handle per group
@@ -188,11 +198,12 @@ for j = 1:Ncat
 
     % tile cosmetics
     if isCatString
-        title(ax, sprintf('Category: %s', allCats{j}));
+        title(ax, sprintf('%s: %s', catName, allCats{j}),'Interpreter','none');
     else
-        title(ax, sprintf('Category: %g', allCats(j)));
+        title(ax, sprintf('%s: %g', catName, allCats(j)),'Interpreter','none');
     end
-    xlabel(ax, xName); ylabel(ax, yName);
+    xlabel(ax, xName,'Interpreter','none'); 
+    ylabel(ax, yName,'Interpreter','none');
     grid(ax, 'on'); box(ax, 'on');
 end
 
