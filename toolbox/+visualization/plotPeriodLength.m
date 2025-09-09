@@ -46,7 +46,7 @@ function [f, plMat] = plotPeriodLength(dataSet, varargin)
     
     % Peak time collection
     idxCont = dataSet.info(dataSet.info.IGNORED == 0, :);
-    maxCycle = max(dataSet.cycle.CYCLE_ID);
+    maxCycle = max(dataSet.cycle.CYCLE_ID(dataSet.cycle.IGNORED == 0));
     ptmCont = nan * zeros(size(idxCont, 1), maxCycle+1);
     for i = 1:size(idxCont)
         pid = idxCont.POS_ID(i);

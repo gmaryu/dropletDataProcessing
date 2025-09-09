@@ -52,7 +52,7 @@ function [props, peakMatrix] = plotRaster(dataSet, varargin)
     vec_medianDiameter = [];
 
     count = 0;
-    max_cyc     = max(dataSet.cycle.CYCLE_ID);  % maximum cycle number in this condition
+    max_cyc     = max(dataSet.cycle.CYCLE_ID(dataSet.cycle.IGNORED == 0));  % maximum cycle number in this condition
     total_peaks = dataSet.cycle;                % peak information (table expected)
     info        = dataSet.info;                 % additional information (table expected)
     unique_pos  = unique(total_peaks.POS_ID);   % list of unique position IDs

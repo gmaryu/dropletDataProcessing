@@ -34,6 +34,7 @@ addParameter(p,'CatVar',"CYCLE_ID",@(x)ischar(x)||(isstring(x)&&isscalar(x)));
 addParameter(p,'IgnoreVar',"IGNORED",@(x)ischar(x)||(isstring(x)&&isscalar(x)));
 addParameter(p,'Colors',[],@(c)isnumeric(c)&&size(c,2)==3);
 addParameter(p,'CatOrder',[],@(x)isnumeric(x)||isstring(x)||iscellstr(x));
+addParameter(p,'ShowLowess',true,@islogical);
 addParameter(p,'LowessSpan',0.25,@(x)isnumeric(x)&&isscalar(x)&&x>0&&x<=1);
 addParameter(p,'MarkerSize',8,@(x)isnumeric(x)&&isscalar(x)&&x>0);
 addParameter(p,'LegendLocation','bestoutside',@(s)ischar(s)||isstring(s));
@@ -190,10 +191,12 @@ for j = 1:Ncat
         h = scatter(ax, x, y, opt.MarkerSize, opt.Colors(g,:), 'filled', ...
             'MarkerFaceAlpha', 0.5, 'MarkerEdgeAlpha', 0.5);
 
-        % LOWESS trend line
-        yfit = malowess(x, y, "Span", opt.LowessSpan);
-        [xs, I] = sort(x);
-        plot(ax, xs, yfit(I), '-', 'LineWidth', 1.5, 'Color', opt.Colors(g,:));
+        if opt.ShowLowess
+            % LOWESS trend line
+            yfit = malowess(x, y, "Span", opt.LowessSpan);
+            [xs, I] = sort(x);
+            plot(ax, xs, yfit(I), '-', 'LineWidth', 1.5, 'Color', opt.Colors(g,:));
+        end
     end
 
     % tile cosmetics
