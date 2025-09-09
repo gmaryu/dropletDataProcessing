@@ -54,7 +54,6 @@ end
 % Identify first row of each track after sorting (group boundary)
 isFirstOfTrack = [true; diff(T.TRACK_ID)~=0];
 grp = cumsum(isFirstOfTrack);            % group id per row
-nonIgnored = ~T.IGNORED;                 % only these get numbered
 
 T.ORIGINAL_CID = T.CYCLE_ID;
 
@@ -62,7 +61,13 @@ ids = unique(grp);
 for i = 1:numel(ids)
     tmpCycles = T.CYCLE_ID(grp==ids(i));
     tmpIgnore = T.IGNORED(grp==ids(i));
-    newCid = tmpCycles - ~tmpIgnore;
+    if any(tmpIgnore)
+        tmpIgnore = true(height(tmpIgnore),1);
+        newCid = tmpCycles - tmpIgnore;
+    else
+        newCid = tmpCycles;
+    end
+
     T.CYCLE_ID(grp==ids(i)) = newCid;
 end
 T.CYCLE_ID(T.IGNORED) = NaN;

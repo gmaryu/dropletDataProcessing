@@ -13,15 +13,15 @@ for f = 1:size(fi_table,1)
     rmIndTS = tmpTS.POS_ID == targetPos & tmpTS.TRACK_ID == targetTrack;
 
     if ~ismember("IGNORED", tmpInfo.Properties.VariableNames)
-        disp("IGNORED is temporally added to dataSet.Info");
+        disp("IGNORED is added to dataSet.Info");
         tmpInfo.IGNORED = rmIndInfo;
     end
     if ~ismember("IGNORED", tmpCycle.Properties.VariableNames)
-        disp("IGNORED is temporally added to dataSet.cycle");
+        disp("IGNORED is added to dataSet.cycle");
         tmpCycle.IGNORED = rmIndCycle;
     end
     if ~ismember("IGNORED", tmpTS.Properties.VariableNames)
-        disp("IGNORED is temporally added to dataSet.timeSeries");
+        disp("IGNORED is added to dataSet.timeSeries");
         tmpTS.IGNORED = rmIndTS;
     end
 

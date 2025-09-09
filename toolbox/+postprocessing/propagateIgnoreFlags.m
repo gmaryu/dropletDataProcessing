@@ -30,7 +30,7 @@ tsT   = ensureIgnoredVar(dataSet.timeSeries);
 % --- apply mask to info ---
 assert(islogical(mask) && numel(mask)==height(infoT), ...
     'Mask must be logical with length equal to height(info).');
-infoT.IGNORED = mask;
+infoT.IGNORED = mask | infoT.IGNORED;
 
 % --- prepare key matrices ---
 keyInfo = infoT{:, keys};

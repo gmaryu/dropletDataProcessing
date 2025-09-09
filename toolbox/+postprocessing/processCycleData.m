@@ -6,7 +6,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
 % This function processes cycle data defined in the table tp (each row representing a cycle)
 % by extracting a segment of the droplet tracking data (tm) for each cycle. It computes:
 %   - INTERPHASE_START_FRAME and INTERPHASE_END_FRAME,
-%   - AREA_NPIXELS_MEDIAN: median droplet area (converted to µm²),
+%   - AREA_DROPLET_MEDIAN: median droplet area (converted to µm²),
 %   - NUC_NPIXELS_Q90: 90th percentile of nuclear pixel counts,
 %   - DNA_SUM_INT_Q90: 90th percentile of Hoechst intensity,
 %   - DNA_NPIXELS_Q90: 90th percentile of DNA pixel counts,
