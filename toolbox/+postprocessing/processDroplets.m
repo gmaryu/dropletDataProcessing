@@ -116,15 +116,14 @@ end
             continue;
         end
 
-        
         % Calculate median diameter.
-        medDiam = median(tm.RADIUS * 2);
+        medDiam = median(tm.RADIUS * 2); % μm
         
-        % Quantification of nuclear (NLS) data
+        % ---- Quantification of nuclear (NLS) data ----
         % If spermCondition true, perform nuclear quantification.
         if spermCondition
             try
-                % (Assume nuclearQuantification already processes the necessary .mat files.)
+                % (Assume nuclearSegmentation already processes the necessary .mat files.)
                 % [tm_updated, tp_updated, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                 [tm, tp, nucleiCount] = postprocessing.getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                
@@ -164,14 +163,22 @@ end
             fprintf(" - No DNA staining -");
         end
 
+        %To correct old "NPIXEL_NUC_MOD" and "SUM_NUCLEUS_HORCHST_INT_MOD"
+        %(To be deleted in future)
+        if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
+            tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
+        end
+        if any(tm.SUM_NUCLEUS_HORCHST_INT_MOD ~= max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT))
+            tm.SUM_NUCLEUS_HORCHST_INT_MOD = max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT);
+        end
         
         % Process cycle data for current droplet.
-       
         %[tp_updated, cycleMetrics] = postprocessing.processCycleData(tp_updated, tm_updated, frameToMin, pixelToUm, spermCondition);
         [tp, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
-        
+        %tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
         % Gather processed data.
         timeSeriesData = [timeSeriesData; tm];
+        
         % timeSeriesData = [timeSeriesData; tm_updated];
         cycleData = [cycleData; tp];
         %cycleData = [cycleData; tp_updated];
