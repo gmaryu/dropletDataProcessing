@@ -1,4 +1,4 @@
-function dataCycle = foldChangeDNA(dataCycle, varargin)
+function output = foldChangeDNA(dataCycle, varargin)
 % remapCycleIdByStartIndex - Ignore early peaks (START_INDEX<=thresh) and
 %                            re-label CYCLE_ID per TRACK_ID in START_INDEX order.
 %
@@ -29,7 +29,7 @@ respectIgnored = p.Results.RespectIgnored;
 T = dataCycle;
 %%
 % ---------- safety: ensure required columns exist ----------
-req = ["TRACK_ID","START_INDEX","CYCLE_ID","DNA_SUM_INT_Q90"];
+req = ["TRACK_ID","START_INDEX","CYCLE_ID","DNA_SUM_INT_MOD_Q90"];
 missing = req(~ismember(req, string(T.Properties.VariableNames)));
 assert(isempty(missing), 'Missing required column(s): %s', strjoin(cellstr(missing), ', '));
 
@@ -51,7 +51,7 @@ grp = cumsum(isFirstOfTrack);            % group id per row
 ids = unique(grp);
 for i = 1:numel(ids)
     % disp(i);
-    tmpDNAQ90 = T.DNA_SUM_INT_Q90(grp==ids(i));
+    tmpDNAQ90 = T.DNA_SUM_INT_MOD_Q90(grp==ids(i));
     if length(tmpDNAQ90) > 1
         fc = [1; tmpDNAQ90(2:end)./tmpDNAQ90(1:end-1)];
         T.FC_DNA(grp==ids(i)) = fc;
@@ -60,5 +60,5 @@ for i = 1:numel(ids)
     end
 end
 T.CYCLE_ID(T.IGNORED) = NaN;
-dataCycle.FC_DNA = T.FC_DNA;
+output = T.FC_DNA;
 end
