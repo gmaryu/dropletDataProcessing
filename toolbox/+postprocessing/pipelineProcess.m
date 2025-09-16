@@ -1,4 +1,4 @@
-function data = pipelineProcess(file_database, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
+function data = pipelineProcess(databases, totalPositions, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
                                 spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
                                 automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator)
 % pipelineProcess  Run the full analysis pipeline across multiple positions.
@@ -18,15 +18,16 @@ function data = pipelineProcess(file_database, totalPositions, frameToMin, pixel
 %   single output structure via `mergeDatabase`.
 %
 % Inputs:
-%   database            – Cell array of structs; each struct must contain at least:
-%                           .posId           (numeric) position identifier  
+%   file_database       – Cell array of structs; each struct must contain at least:
+%                           .posId (numeric) position identifier  
 %                           .trackMateSpotsCsv, 
 %                           .segmented_tracks path, etc.  
 %   totalPositions      – Vector of numeric position IDs to process  
 %   frameToMin          – Scalar double; conversion factor from frame index to minutes  
 %   pixelToUm           – Scalar double; conversion factor from pixels to micrometers  
 %   initialPeakTimeBound– Scalar double; time (min) beyond which oscillations are ignored  
-%   forceIgnore         – Table with columns PosID and DropID listing droplets to skip  
+%   forceIgnore         – Table with columns PosID and DropID listing
+%                          droplets to skip due to low tracking quality
 %   spermCondition      – Logical; if true, perform nuclear segmentation & DNA mask steps  
 %   hoechstCondition    – Logical; if true, include Hoechst mask in downstream analysis  
 %   nucChannel          – String; name of the nuclear channel (e.g. "CFP")  
@@ -58,40 +59,40 @@ function data = pipelineProcess(file_database, totalPositions, frameToMin, pixel
 %        data = postprocessing.mergeDatabase(database, ...parameters...);  
 %
 % Example:
-%   dbAll = loadDatabase(...);  
 %   forceIgnore = readtable('force_ignore.csv');  
-%   data = pipelineProcess(dbAll, 0:10, 6, 2.649, 100, forceIgnore, ...
+%   data = pipelineProcess(databases, 0:10, 6, 2.649, 100, forceIgnore, ...
 %                          true, true, "CFP", "DAPI", true, true, true, true, ...
 %                          "MEAN_INTENSITY_CH5", "MEAN_INTENSITY_CH3");
 %
 % See also:
 %   postprocessing.processPosition, postprocessing.mergeDatabase
+% Author: Gembu Maryu
 
 
 arguments
-    file_database            cell
+    databases       cell
     totalPositions      {mustBeNumericOrLogical}
     frameToMin          double
     pixelToUm           double
     initialPeakTimeBound double
     forceIgnore         table
-    spermCondition logical
-    hoechstCondition logical
-    nucChannel string
-    dnaChannel string
-    overwriteNucMask logical
-    overwriteDNAInfo logical
+    spermCondition      logical
+    hoechstCondition    logical
+    nucChannel          string
+    dnaChannel          string
+    overwriteNucMask    logical
+    overwriteDNAInfo    logical
     automaticNucleiCount logical
-    hoechstoffset logical
-    FRETNumerator string
-    FRETDenominator string
+    hoechstoffset       logical
+    FRETNumerator       string
+    FRETDenominator     string
 end
 output_database = {};
 % Loop through each database entry and process only the selected positions.
-parfor i = 1:length(file_database)
-%for i = 1:length(file_database)
+parfor i = 1:length(databases)
+%for i = 1:length(databases)
 
-    db = file_database{i};
+    db = databases{i};
 
     if ismember(db.posId, totalPositions)
         data_output = postprocessing.processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
