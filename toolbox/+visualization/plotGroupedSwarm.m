@@ -31,11 +31,14 @@ addParameter(p,'Gap',0.25,@(x)isnumeric(x)&&isscalar(x));
 addParameter(p,'Jitter',0.30,@(x)isnumeric(x)&&isscalar(x));
 addParameter(p,'Colors',[],@(c)isnumeric(c)&&size(c,2)==3);
 addParameter(p,'CatOrder',[],@(x)isnumeric(x)||isstring(x)||iscellstr(x));
+addParameter(p,'MaxCatNum',[],@(x)isnumeric(x)&&isscalar(x));
 parse(p,varargin{:});
 opt = p.Results;
 
 Ng = numel(groupData);
 if Ng==0, warning('groupData is empty.'); return; end
+
+catNum = opt.MaxCatNum;
 
 % columnName is required
 colName = string(opt.columnName);
@@ -81,7 +84,15 @@ for g = 1:Ng
     for i = 1:numel(c)
         % logical mask is clearer than bitand
         mask = (~v.IGNORED) & (v.CYCLE_ID == c(i));
-        groupData(g).dnaInt{i} = colData(mask);
+
+        % remove 0 for log scale plot
+        vals = colData(mask);
+        ind0 = (vals == 0);
+        vals(ind0) = [];
+        
+        groupData(g).dnaInt{i} = vals;
+        %groupData(g).dnaInt{i} = colData(mask);
+        
     end
 
     % write back in case we modified v
@@ -113,7 +124,12 @@ end
 if isCatString && ~iscell(allCats)
     allCats = cellstr(string(allCats));
 end
-Ncat = numel(allCats);
+
+if isempty(catNum)
+    Ncat = numel(allCats);
+else
+    Ncat = catNum;
+end
 if Ncat==0, warning('No categories to plot.'); return; end
 
 % -------- plotting --------
@@ -129,7 +145,8 @@ for g = 1:Ng
     cats = groupData(g).cats;
     if iscell(cats) || isstring(cats), cats = cellstr(string(cats)); end
 
-    for j = 1:numel(cats)
+    for j = 1:Ncat
+    %for j = 1:numel(cats)
         % locate category index in the master list
         if isCatString
             idx = find(strcmp(allCats, cats{j}), 1);
