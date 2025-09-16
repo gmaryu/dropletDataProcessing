@@ -258,13 +258,9 @@ function [hoechstArea, idxToFrame] = cropDNAMask(files, labels, nucSegOutputMat,
 
 
             %% compare nuclear amsk and DNA mask upgrade the accuracy of nuclear segmentation result
-            tmpNucMask = double(nucMask(:,:,i));
+            tmpNucMask = nucMask(:,:,i);
             binaryDnaMask = dnaMask(:,:,i);
-            diffMask = tmpNucMask - binaryDnaMask;
-            if any(diffMask(:) < 0) && ~any(tmpNucMask, 'all')
-                %fprintf(' - Nuc Area updated based on Hoechst data -');
-                NucDNAMask(:,:,i) = tmpNucMask + binaryDnaMask;
-            end
+            NucDNAMask(:,:,i) = tmpNucMask | binaryDnaMask;
 
         end
         hoechstsum =[];

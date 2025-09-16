@@ -26,11 +26,11 @@ function nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overw
 %   are named by replacing "droplet" with "nuclear" or "dna", respectively.
 
 arguments
-    db {iscell(db)}
-    nucChannel (1,1) string
-    dnaChannel (1,1) string
-    overwriteNucMask logical
-    overwriteDNAInfo logical
+    db                  {iscell(db)}
+    nucChannel          (1,1) string
+    dnaChannel          (1,1) string
+    overwriteNucMask    logical
+    overwriteDNAInfo    logical
 end
 
 % Prepare a folder for output masks
