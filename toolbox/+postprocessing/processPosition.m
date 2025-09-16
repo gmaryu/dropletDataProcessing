@@ -50,56 +50,25 @@ function data_output = processPosition(db, frameToMin, pixelToUm, initialPeakTim
 %         .cycle         - Table containing oscillation (cycle) data.
 %         .noOcillation  - Table (or array) for droplets that did not show any oscillation peaks.
 %
-% Processing Steps:
-%   1. Calls postprocessing.analyzeTrackMate to extract droplet tracking information and identify oscillation peaks.
-%   2. Ensures that the sperm count file exists; if not, creates an empty table and writes it.
-%   3. When spermCondition is true, calls postprocessing.nuclearSegmentation for nuclear mask generation and
-%      DNA quantification.
-%   4. If oscillation peaks are detected, calls postprocessing.processDroplets to process droplet-level dynamics,
-%      which returns time series, cycle, and droplet summary data.
-%   5. Updates the input structure "db" with all newly computed data.
-%
-% Example:
-%   % Given an existing structure "db" for a position, and parameters defined as:
-%   frameToMin         = 6;
-%   pixelToUm          = 2.649;
-%   initialPeakTimeBound = 100;
-%   forceIgnore        = <your forceIgnore table>;
-%   spermCondition     = true;
-%   hoechstCondition   = true;
-%   nucChannel         = "CFP";
-%   dnaChannel         = "DAPI";
-%   overwriteNucMask   = true;
-%   overwriteDNAInfo   = true;
-%   automaticNucleiCount = true;
-%   hoechstoffset      = true;
-%   FRETNumerator      = "MEAN_INTENSITY_CH5";
-%   FRETDenominator    = "MEAN_INTENSITY_CH3";
-%
-%   % Process the position:
-%   db = processPosition(db, frameToMin, pixelToUm, initialPeakTimeBound, forceIgnore, ...
-%                        spermCondition, hoechstCondition, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo, ...
-%                        automaticNucleiCount, hoechstoffset, FRETNumerator, FRETDenominator);
-%
 % See also: postprocessing.analyzeTrackMate, postprocessing.nuclearSegmentation, postprocessing.processDroplets
-
+% Author: Gembu Maryu
 
 arguments
-    db (1,1) struct
-    frameToMin double
-    pixelToUm double
+    db                  (1,1) struct
+    frameToMin          double
+    pixelToUm           double
     initialPeakTimeBound double
-    forceIgnore table
-    spermCondition logical
-    hoechstCondition logical
-    nucChannel string
-    dnaChannel string
-    overwriteNucMask logical
-    overwriteDNAInfo logical
+    forceIgnore         table
+    spermCondition      logical
+    hoechstCondition    logical
+    nucChannel          string
+    dnaChannel          string
+    overwriteNucMask    logical
+    overwriteDNAInfo    logical
     automaticNucleiCount logical
-    hoechstoffset logical
-    FRETNumerator string
-    FRETDenominator string
+    hoechstoffset       logical
+    FRETNumerator       string
+    FRETDenominator     string
 end
 
     %% Analyze the TrackMate data for this position.
