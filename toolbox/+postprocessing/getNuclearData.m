@@ -35,7 +35,20 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
     croppedImages = db.croppedImages;
     maskMatFilesPath = db.maskMatFiles;
     nuclearMaskFile = fullfile(maskMatFilesPath, sprintf("nuclear_%03d.mat", dropletID));
+    labelFolder = fullfile(croppedImages, sprintf("droplet_%d03",dropletID),'*label*');
     
+    % Load droplet label files
+    fs = dir(labelFolder);
+    lblroot = fs(1).folder;
+    N = length(fs);
+    dropletPixels = nan*ones(N,1);
+    for i = 1:N
+        tmplabel = imbinarize(imread(fullfile(lblroot, fs(i).name)));
+        labelProps = regionprops(tmplabel);
+        dropletPixels(i) = labelProps.Area;
+    end
+
+
     % Load mat files
     try
         nucData = load(nuclearMaskFile);
@@ -43,17 +56,17 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
         fprintf(' ! getNuclearData [%s] %s\n', ME.identifier, ME.message);
     end
     
-    nuclearData.nuclearArea = nucData.nuclearArea; % Vector of 1 x timepoints
+    nuclearData.nuclearAreaPixel = nucData.nuclearArea; % Vector of 1 x timepoints 
     nuclearData.idxToFrameNuc = nucData.idxToFrame; % Vector of 1 x timepoints
     
     % sanity check, frame consistency
     assert(all(tm.FRAME == nuclearData.idxToFrameNuc'));
 
     % Append the obtained data to the tracking table.
-    tm.NPIXEL_NUC = nuclearData.nuclearArea';
-
+    tm.NPIXEL_NUC = nuclearData.nuclearAreaPixel';
+    tm.AREA_NPIXEL = dropletPixels;
     % Judge whether there are positive nuclear signal pixels
-    if max(nuclearData.nuclearArea) ~= 0
+    if max(nuclearData.nuclearAreaPixel) ~= 0
         nucleiCount = 1;
         fprintf('- Nuclear object detected')
         if automaticNucleiCount
