@@ -48,8 +48,7 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     catch
         % Return sorted TrackMate reuslt without ratio calculation
         fprintf('No FRET denominator and neumerator');
-        flagFRET = 1;
-         
+        flagFRET = 1; 
     end
 
     % Peak detection

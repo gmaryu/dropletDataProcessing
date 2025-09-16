@@ -35,8 +35,6 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(db, dropletID, posId, tm
         spermCount double
         hoechstoffset logical
     end
-
-    %profile on
     
     %% fileIO
     % Construct file names (using your naming convention).
