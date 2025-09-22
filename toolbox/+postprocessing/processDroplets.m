@@ -76,7 +76,6 @@ arguments
     automaticNucleiCount    logical
     hoechstoffset           logical
 end
-
     % Initialize output containers.
     timeSeriesData = table();
     cycleData = table();
@@ -93,7 +92,8 @@ end
         dropletID = uniqueDropletIDs(j);
         
         % Print information.
-        fprintf(" - Droplet %d of Pos %d", dropletID, posId);
+        %profile on
+        fprintf(" - Droplet %d of Pos %d \n", dropletID, posId);
 
         % Data loading for the target droplet
         % Extract data for this droplet.
@@ -122,61 +122,71 @@ end
         % ---- Quantification of nuclear (NLS) data ----
         % If spermCondition true, perform nuclear quantification.
         if spermCondition
-            try
+            %try
                 % (Assume nuclearSegmentation already processes the necessary .mat files.)
                 % [tm_updated, tp_updated, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                 [tm, tp, nucleiCount] = postprocessing.getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
-               
-            catch
+            %catch
                 %fprintf(" - Failed. getNuclearData\n");
                 %disp(ME.identifier);
                 %rethrow(ME);
                 %fprintf(" - Ignored. .mat file not found.\n");
 
-                continue;
-            end
+                %continue;
+            %end
         else
             nucleiCount = NaN;
             fprintf(" - cytoplasm only");
         end
 
-        % If hoechstCondition true, perform DNA quantification.
-        if hoechstCondition
-            try
-                % (Assume nuclearQuantification already processes the necessary .mat files.)
-                % run detectMultiNuclei
-                % [tm_updated, tp_updated, spermCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm_updated, tp_updated, spermCount, hoechstoffset);
-                [tm, tp, spermCount, nucleiCount] = postprocessing.getDNAData(db, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
-                
-            catch ME
-                fprintf(" - Failed. getDNAData\n");
-                %fprintf(" - Ignored. .mat file not found.\n");
-                disp(ME.identifier);
-                %rethrow(ME);
-                
-                
-                continue;
-            end
+        % % If hoechstCondition true, perform DNA quantification.
+        % if hoechstCondition
+        %     try
+        %         % (Assume nuclearQuantification already processes the necessary .mat files.)
+        %         % run detectMultiNuclei
+        %         % [tm_updated, tp_updated, spermCount] = postprocessing.getDNAData(db.croppedImages, dropletID, db.posId, tm_updated, tp_updated, spermCount, hoechstoffset);
+        %         [tm, tp, spermCount, nucleiCount] = postprocessing.getDNAData(db, dropletID, db.posId, tm, tp, spermCount, hoechstoffset);
+        % 
+        % 
+        %         % --- To correct old "NPIXEL_NUC_MOD" and "SUM_NUCLEUS_HORCHST_INT_MOD"
+        %         %(To be deleted in future)
+        %         if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
+        %             tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
+        %         end
+        %         if any(tm.SUM_NUCLEUS_HORCHST_INT_MOD ~= max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT))
+        %             tm.SUM_NUCLEUS_HORCHST_INT_MOD = max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT);
+        %         end
+        % 
+        %     catch ME
+        %         fprintf(" - Failed. getDNAData\n");
+        %         %fprintf(" - Ignored. .mat file not found.\n");
+        %         disp(ME.identifier);
+        %         %rethrow(ME);
+        % 
+        %         continue;
+        %     end
+        % profile off
+        % else
+        %     spermCount = NaN;
+        %     fprintf(" - No DNA staining -");
+        % end
 
+
+        % --- Measure compartment specific mean fluorescent intensity and
+        % calculate FRET/CFP ratio ---
+        if spermCondition
+            [tm, spermCount, nucleiCount] = postprocessing.getCompartmentIntensity(db, dropletID, posId, tm);
         else
             spermCount = NaN;
-            fprintf(" - No DNA staining -");
-        end
-
-        %To correct old "NPIXEL_NUC_MOD" and "SUM_NUCLEUS_HORCHST_INT_MOD"
-        %(To be deleted in future)
-        if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
-            tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
-        end
-        if any(tm.SUM_NUCLEUS_HORCHST_INT_MOD ~= max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT))
-            tm.SUM_NUCLEUS_HORCHST_INT_MOD = max(tm.SUM_NUCLEUS_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT);
+            nucleiCount = NaN;
+            tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
         end
         
-        % Process cycle data for current droplet.
-        %[tp_updated, cycleMetrics] = postprocessing.processCycleData(tp_updated, tm_updated, frameToMin, pixelToUm, spermCondition);
+        % --- Process cycle data for current droplet.
         [tp, cycleMetrics] = postprocessing.processCycleData(tp, tm, frameToMin, pixelToUm, spermCondition);
-        %tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
-        % Gather processed data.
+        
+
+        % --- Gather processed data.
         timeSeriesData = [timeSeriesData; tm];
         
         % timeSeriesData = [timeSeriesData; tm_updated];
@@ -194,4 +204,5 @@ end
     else
         dropletInfo = array2table(zeros(0,5), 'VariableNames', {'TRACK_ID','NUCLEI_COUNT','SPERM_COUNT','CYCLE_NUMBER','MEDIAN_DIAMETER'});
     end
+disp('hoge');
 end

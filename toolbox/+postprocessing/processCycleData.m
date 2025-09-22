@@ -48,8 +48,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     dnaSumIntQ90         = nan(nCycles, 1);
     dnaPixelsQ90         = nan(nCycles, 1);
     dnaIncRateCoeff      = nan(nCycles, 1);
-    nucPixelsQ90_MOD(k)  = nan(nCycles, 1);
-    dnaSumIntQ90_MOD(k)  = nan(nCycles, 1);
+    nucPixelsQ90_MOD     = nan(nCycles, 1);
+    dnaSumIntQ90_MOD     = nan(nCycles, 1);
     
     for k = 1:nCycles
         startidx = tp.START_INDEX(k);       % start index information in peak table for the droplet of interest
