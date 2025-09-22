@@ -78,10 +78,25 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         rawImagesCat = cat(3, rawImages{:});
         labelImageCat = cat(3, labelImage{:});
     catch
-        fprintf('Size of cropped images are not consistent')
-        nuclearArea = [];
-        idxToFrame = [];
-        return;
+        % padding with NaN
+        T = numel(rawImages);
+        H = cellfun(@(a) size(a,1), rawImages);
+        W = cellfun(@(a) size(a,2), rawImages);
+        Hmax = max(H);  Wmax = max(W);
+
+        rawImagesCat = zeros(Hmax, Wmax, T, 'like', rawImages{1});   % 0パディング
+        labelImageCat = zeros(Hmax, Wmax, T, 'like', labelImage{1}); 
+
+        for t = 1:T
+            h = H(t); w = W(t);
+            r0 = floor((Hmax - h)/2);
+            c0 = floor((Wmax - w)/2);
+            % r0 = 0;
+            % c0 = 0;
+            rawImagesCat( (1:h)+r0, (1:w)+c0, t ) = rawImages{t};
+            labelImageCat( (1:h)+r0, (1:w)+c0, t ) = labelImage{t};
+        end
+        fprintf(' -- Size of cropped images are not consistent ')
     end
     
     % replace pixels of droplet outside to 0
@@ -92,7 +107,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
     %% Process each frame to segment nucleus.
     for i = 1:N
         currentImage = double(maskedImages(:,:,i));
-        nanmask = labelImage{i};
+        nanmask = labelImageCat(:,:,i);
         mask = nanmask;
 
         % gaussian fitting of to detect nuclear area (brightest area) and 
@@ -115,7 +130,7 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
             ub = [inf, (size(gfilt,1)/gfitMaxStdFactor)^2, inf];
             gfit = lsqnonlin(@(p) g2d_residuals(p, mx(idx_fit), my(idx_fit), gfilt(idx_fit)), initialGuess, lb, ub, opts);
             mask_cyto = gfit(1)*exp(-((mx-ix).^2+(my-iy).^2)/gfit(2)) + gfit(3) < gfit(1)*exp(-3) + gfit(3);
-            masked_cyto_images = gfilt .* double(mask_cyto);
+            masked_cyto_images = gfilt .* double(mask_cyto');
             masked_cyto_images(masked_cyto_images == 0) = NaN;
             mu_val = mean(masked_cyto_images(:), 'omitnan');
             sigma_val = std(masked_cyto_images(:), 'omitnan');
@@ -128,16 +143,18 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         end
     end
     
-    nuclearArea = sum(reshape(nuclearMask, nPixels*nPixels, N), 1);
+    nuclearArea = squeeze(sum(nuclearMask,[1 2]));
     
     %% (Optional) Save overlay images.
+    %{
     for i = 1:N
         overlay = imoverlay(rawImagesCat(:,:,i), bwperim(nuclearMask(:,:,i)), [0, 1, 0]);
         name = sprintf("NucMask_Overlay_%03d.tif",i);
 
         % Uncomment the line below to save overlay images.
-        %imwrite(overlay, fullfile(imgroot, name));
+        imwrite(overlay, fullfile(imgroot, name));
     end
+    %}
     
     %% Determine frame indices from file names.
     [~, basename, ext] = fileparts(files);
@@ -153,6 +170,6 @@ function [nuclearArea, idxToFrame] = cropBrightChunk(files, labels, output)
         end
         idxToFrame(i) = str2double(idx);
     end
-    
-    save(output, "nuclearMask", "nuclearArea", "idxToFrame", "fs");
+    fprintf(" -- Nuclear mask obtained.\n");
+    save(output, "nuclearMask", "nuclearArea","labelImageCat", "idxToFrame", "fs");
 end

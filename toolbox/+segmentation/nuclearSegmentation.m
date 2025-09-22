@@ -57,11 +57,11 @@ for j = 1:length(subdirs)
 
     % Process nuclear segmentation if requested.
     if overwriteNucMask
-        fprintf("Processing nuclear mask for %s of Pos %d...\n", subdirs(j).name, db.posId);
+        fprintf("Processing nuclear mask for %s of Pos %d... ", subdirs(j).name, db.posId);
         try
             % Call the cropping/segmentation routine.
             [nuclearArea, idxToFrameNuc] = segmentation.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
-            fprintf("Nuclear mask obtained.\n");
+            
         catch ME
             fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
             continue;
@@ -71,17 +71,15 @@ for j = 1:length(subdirs)
 
     % Process DNA (Hoechst) intensity if requested.
     if overwriteDNAInfo
-        fprintf("Processing DNA segmentation for %s of Pos %d...\n", subdirs(j).name, db.posId);
+        fprintf("Processing DNA segmentation for %s of Pos %d... ", subdirs(j).name, db.posId);
         try
             [dnaArea, idxToFrameDNA] = segmentation.cropDNAMask(dnaImages, labelImages, nuclearMaskFile, dnaMaskFile);
-            fprintf("DNA quantification completed.\n");
+            
         catch ME
             fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
             continue;
         end
     end
 end
-
-
 
 end
