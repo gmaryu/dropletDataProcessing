@@ -161,6 +161,7 @@ if  ismember('NUC_NPIXELS_Q90',tp.Properties.VariableNames) && any(~isnan(tp.NUC
     tp.DNACR = tp.DNA_SUM_INT_MOD_Q90 ./ visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm) / dnarenormfactor; % a.u (sum px) / um^3
     tp.FC_DNA = visualization.foldChangeDNA(tp);
 end
+tp.FC_Period = visualization.foldChangePeriod(tp);
 tp.VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm);
 tp.MARKERSIZE = (log10(visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm)) - 5.25) * 3; % log um3 volume roughly within 5-7
 tp.MARKERSIZE(tp.MARKERSIZE < 0.5, :) = 0.5;
