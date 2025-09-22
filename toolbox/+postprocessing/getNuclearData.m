@@ -31,23 +31,12 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
         automaticNucleiCount logical
     end
 
+    fprintf('    getNuclearData: ');
+
     % Construct file names (using your naming convention).
-    croppedImages = db.croppedImages;
     maskMatFilesPath = db.maskMatFiles;
     nuclearMaskFile = fullfile(maskMatFilesPath, sprintf("nuclear_%03d.mat", dropletID));
-    labelFolder = fullfile(croppedImages, sprintf("droplet_%d03",dropletID),'*label*');
     
-    % Load droplet label files
-    fs = dir(labelFolder);
-    lblroot = fs(1).folder;
-    N = length(fs);
-    dropletPixels = nan*ones(N,1);
-    for i = 1:N
-        tmplabel = imbinarize(imread(fullfile(lblroot, fs(i).name)));
-        labelProps = regionprops(tmplabel);
-        dropletPixels(i) = labelProps.Area;
-    end
-
 
     % Load mat files
     try
@@ -63,53 +52,19 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
     assert(all(tm.FRAME == nuclearData.idxToFrameNuc'));
 
     % Append the obtained data to the tracking table.
-    tm.NPIXEL_NUC = nuclearData.nuclearAreaPixel';
-    tm.AREA_NPIXEL = dropletPixels;
+    tm.NPIXEL_NUC = nuclearData.nuclearAreaPixel;
+
     % Judge whether there are positive nuclear signal pixels
     if max(nuclearData.nuclearAreaPixel) ~= 0
         nucleiCount = 1;
-        fprintf('- Nuclear object detected')
+        fprintf('-- Nuclear object detected \n')
         if automaticNucleiCount
             [nucleiCount, nucleiCountSeries] = postprocessing.detectMultiNuclei(nuclearMaskFile);
             tm.NUCLEI_COUNT = nucleiCountSeries';
         end
-        %{
-        if mn > 1
-            spermCount = mn;
-        else
-            if size(tp, 1) >= 3 % more than three peaks
-                if sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.0001) > size(tp, 1) - 2
-                    
-                    % single nuclear exists
-                    if max(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.05 && max(power(tp.DNA_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2)) > 0.005
-                        % maximum n/c volume > 0.05 & maximum Hoechst volume > 0.005
-                        spermCount = 1;
-                        fprintf(" - Single nucleus\n");
-                    else
-                        spermCount = nan;
-                        fprintf(" - Fail type 1 - bright pixel in DAPI but area is not enough large\n");
-                    end
-                    
-                elseif sum(power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3/2) > 0.001) < 2
-                    
-                    spermCount = 0;
-                    fprintf(" - No nucleus\n");
-                    
-                else
-                    
-                    spermCount = nan;
-                    fprintf(" - Fail type 2 - uncategorized error\n");
-                    
-                end
-                
-            else
-                spermCount = NaN;
-                fprintf(" - Number of cycle too small -");
-            end
-        end
-        %}    
+   
     else
-        fprintf('- No nuclear object detected')
+        fprintf('-- No nuclear object detected \n')
         tm.NUCLEI_COUNT = NaN*ones(size(tm,1),1);
         nucleiCount = NaN;
     end    

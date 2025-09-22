@@ -36,6 +36,8 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(db, dropletID, posId, tm
         hoechstoffset logical
     end
     
+    fprintf('getDNAData: ');
+
     %% fileIO
     % Construct file names (using your naming convention).
     croppedImages = db.croppedImages;
@@ -89,13 +91,6 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(db, dropletID, posId, tm
     tm.NPIXEL_NUC_MOD = squeeze(sum(sum(dnaData.NucDNAMask, 1), 2));
 
     %% Sperm Counting 
-    % if any(dnaData.dnaMask(:) > 0)
-    %     % positive nuclear area and positive dna area
-    %     spermCount = 1;
-    % else
-    %     % positive nuclear area, but no positive dna area
-    %     spermCount = 0;
-    % end
 
     % Judge whether there are positive hoechst signal pixels
     if max(dnaData.hoechstArea) ~= 0
@@ -167,6 +162,6 @@ function [tm, tp, spermCount, nucleiCount] = getDNAData(db, dropletID, posId, tm
         spermCount = NaN;
         nucleiCount = NaN;
     end    
-  
+    
     %profile off
 end
