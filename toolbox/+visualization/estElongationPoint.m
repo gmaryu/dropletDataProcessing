@@ -47,10 +47,11 @@ for i = 1:size(info,1)
         end
 
         % fitting
-        if numel(xdata) > 4
+        if numel(xdata) > 4 & ~any(isinf(xdata))
             p0 = [min(ydata), 2*(max(ydata)-min(ydata)), 1.0, 0.5];
             logistic_transition = fittype("a + b ./ (1 + exp(-c * (x - d)))", "independent", "x", "dependent", ...
                 "y", "coefficients", {'a', 'b', 'c', 'd'});
+
             fitresult = fit(xdata, ydata, logistic_transition,"Robust","Bisquare", "StartPoint", p0);
             fitting_K(i) = fitresult.c;
             fitting_rmid(i) = fitresult.d;

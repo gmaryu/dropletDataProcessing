@@ -1,4 +1,4 @@
-function nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
+function nuclearSegmentation(db, ids, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
 % nuclearQuantification  Process nuclear segmentation and DNA intensity quantification.
 %
 %   nuclearQuantification(database, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo)
@@ -27,6 +27,7 @@ function nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overw
 
 arguments
     db                  {iscell(db)}
+    ids                 (:,1) double
     nucChannel          (1,1) string
     dnaChannel          (1,1) string
     overwriteNucMask    logical
@@ -43,41 +44,47 @@ subdirs = subdirs(~ismember({subdirs(:).name},{'.','..'}));
 
 for j = 1:length(subdirs)
 
-    % Construct the file patterns for nuclear and DNA images.
-    nuclearImages = fullfile(db.croppedImages, subdirs(j).name, ...
-        sprintf("Pos%d_%s_???.tif", db.posId, nucChannel));
-    dnaImages     = fullfile(db.croppedImages, subdirs(j).name, ...
-        sprintf("Pos%d_%s_???.tif", db.posId, dnaChannel));
-    labelImages = fullfile(db.croppedImages, subdirs(j).name, ...
-        sprintf("Pos%d_label_???.tif", db.posId));
+    droplet = subdirs(j).name;
+    num = sscanf(droplet, 'droplet_%d');
+    isInList = ismember(num, ids);
 
-    % Construct the output file names for the segmentation results.
-    nuclearMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "nuclear")));
-    dnaMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "dna")));
+    if isInList % skip droplets that has no peaks and listed in fi_table
+        % Construct the file patterns for nuclear and DNA images.
+        nuclearImages = fullfile(db.croppedImages, subdirs(j).name, ...
+            sprintf("Pos%d_%s_???.tif", db.posId, nucChannel));
+        dnaImages     = fullfile(db.croppedImages, subdirs(j).name, ...
+            sprintf("Pos%d_%s_???.tif", db.posId, dnaChannel));
+        labelImages = fullfile(db.croppedImages, subdirs(j).name, ...
+            sprintf("Pos%d_label_???.tif", db.posId));
 
-    % Process nuclear segmentation if requested.
-    if overwriteNucMask
-        fprintf("Processing nuclear mask for %s of Pos %d... ", subdirs(j).name, db.posId);
-        try
-            % Call the cropping/segmentation routine.
-            [nuclearArea, idxToFrameNuc] = segmentation.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
-            
-        catch ME
-            fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
-            continue;
+        % Construct the output file names for the segmentation results.
+        nuclearMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "nuclear")));
+        dnaMaskFile = fullfile(db.maskMatFiles, sprintf("%s.mat",strrep(subdirs(j).name, "droplet", "dna")));
+
+        % Process nuclear segmentation if requested.
+        if overwriteNucMask
+            fprintf("Processing nuclear mask for %s of Pos %d... ", subdirs(j).name, db.posId);
+            try
+                % Call the cropping/segmentation routine.
+                [nuclearArea, idxToFrameNuc] = segmentation.cropBrightChunk(nuclearImages, labelImages, nuclearMaskFile);
+
+            catch ME
+                fprintf("Nuclear segmentation failed for %s: %s\n", subdirs(j).name, ME.message);
+                continue;
+            end
+
         end
-    
-    end
 
-    % Process DNA (Hoechst) intensity if requested.
-    if overwriteDNAInfo
-        fprintf("Processing DNA segmentation for %s of Pos %d... ", subdirs(j).name, db.posId);
-        try
-            [dnaArea, idxToFrameDNA] = segmentation.cropDNAMask(dnaImages, labelImages, nuclearMaskFile, dnaMaskFile);
-            
-        catch ME
-            fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
-            continue;
+        % Process DNA (Hoechst) intensity if requested.
+        if overwriteDNAInfo
+            fprintf("Processing DNA segmentation for %s of Pos %d... ", subdirs(j).name, db.posId);
+            try
+                [dnaArea, idxToFrameDNA] = segmentation.cropDNAMask(dnaImages, labelImages, nuclearMaskFile, dnaMaskFile);
+
+            catch ME
+                fprintf("DNA quantification failed for %s: %s\n", subdirs(j).name, ME.message);
+                continue;
+            end
         end
     end
 end

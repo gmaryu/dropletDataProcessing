@@ -41,8 +41,9 @@ for i = 1:size(info,1)
         tmpPos = info.POS_ID(i);
         tmpTrackID = info.TRACK_ID(i);
         tmpMedDia = info.ORIGINAL_MED_DIAMETER(i);
+        fprintf("Pos%d TrackID%d", tmpPos, tmpTrackID);
 
-        % 一致するセルのインデックスを探す
+        % index in database
         idx = find(posIDs == tmpPos);
         if ~isempty(idx)
             tmpStruct = database{idx};
@@ -91,7 +92,7 @@ for i = 1:size(info,1)
             nexttile(3);
             plot(tmpTime,tmpSignal3);
             yline(rlimit_DNAVR,'r');
-            yline((1:round(rlimit))*median(tmpTS.DNACR(1:5)),'--');
+            yline(2.^(0:fix(rlimit))*tmpCyc.DNACR(1),'--');
             xline(unique([tmpCyc.START_INDEX*dataSet.FrameToMin;tmpCyc.END_INDEX*dataSet.FrameToMin]),':');
             %ylim([0,rlimit_DNAVR+0.1]);
             title(sprintf('ReplicationLimit: %d',rlimit));
@@ -145,7 +146,7 @@ for i = 1:size(info,1)
             close gcf
 
         else
-            warning('PosID=%d was not found', targetID);
+            warning('PosID=%d was not found', tmpPos);
             break
         end
     end

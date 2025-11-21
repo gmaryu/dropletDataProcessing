@@ -1,4 +1,6 @@
 function dataSet = predReplicationLimit(dataSet)
+% Extract dilution rate
+d_rate = 0.7;
 
 %dataSet = control_nuc;
 info = dataSet.info;
@@ -18,10 +20,11 @@ for i = 1:size(info,1)
 
         D = 1000;
         N = 12;
-        k = log2(1+2*(tmpDia/D).^3*((2.^N)-1));
+        m = info.SPERM_COUNT(i);
+        k = log2(1+(2/m)*(tmpDia/D).^3*((2.^N)-1)*d_rate);
 
         info.rmax(i) = k;
-        info.rmax_DNACR(i) = k*DNACR1;
+        info.rmax_DNACR(i) = (2^k)*DNACR1;
     else
         info.rmax(i) = nan;
         info.rmax_DNACR(i) = nan;
