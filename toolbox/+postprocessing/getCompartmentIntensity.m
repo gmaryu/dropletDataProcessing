@@ -53,6 +53,8 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         nucMask = nucData.nuclearMask;
     else
         fprintf('-- No Nuclear mask .mat file');
+        spermCount = NaN;
+        nucleiCount = NaN;
         return
     end
 
@@ -77,7 +79,7 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
     end
     
     %% Prepare cropped images stack
-    % Load fluorescent images and label
+    % --- Load fluorescent images and label ---
     fs = dir(fullfile(croppedImages,'*.tif'));
     names = {fs.name};
 
@@ -102,7 +104,7 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         f = f(idx);
         T = numel(f);
 
-        stack = zeros(size(nucData.labelImageCat));
+        stack = zeros(size(nucMask));
         Hmax = size(stack,1); Wmax = size(stack,2);
         for t = 1:T
     		img = imread(fullfile(f(t).folder, f(t).name));
@@ -181,13 +183,13 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         tm.SUM_SPERM_HOECHST_INT = squeeze(sum(sum(dnaHoechstInt, 1), 2));
         tm.SUM_NUCLEUS_HOECHST_INT = squeeze(sum(sum(nucHoechstInt, 1), 2));
         tm.SUM_NUCLEUS_HORCHST_INT_MOD = squeeze(sum(sum(nucHoechstInt_mod, 1), 2));
-        tm.NPIXEL_DNA = squeeze(sum(sum(dnaData.dnaMask, 1), 2));
+        tm.NPIXEL_DNA = squeeze(sum(sum(dnaMask, 1), 2));
         tm.NPIXEL_NUC_MOD = squeeze(sum(sum(nucMask, 1), 2));
 
         % Judge whether there are positive hoechst signal pixels
         if max(dnaData.hoechstArea) ~= 0
             % Case for spermCount = 1;
-            fprintf('- DNA object detected \n')
+            fprintf('- DNA object detected')
             [~, spermCountSeries] = postprocessing.detectMultiNuclei(dnaMaskFile);
             spermCount = spermCountSeries(1);% superm number at first time frame when tracking started
             tm.SPERM_COUNT = spermCountSeries';
@@ -207,6 +209,16 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
                 tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
                 fprintf('- No colocalization');
             end
+        else
+            spermCount = 0;
+            nucleiCount = 0;
+            tm.SPERM_COUNT = NaN*ones(size(tm,1),1);
+            tm.NUCLEI_COUNT = NaN*ones(size(tm,1),1);
+            tm.NPIXEL_DNA = NaN*ones(size(tm,1),1);
+            tm.NPIXEL_NUC = NaN*ones(size(tm,1),1);
+            tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
+            tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
+            fprintf('- No DNA mask');
         end
     end
 

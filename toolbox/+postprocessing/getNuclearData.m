@@ -43,24 +43,25 @@ function [tm, tp, nucleiCount] = getNuclearData(db, dropletID, tm, tp, nucleiCou
         nucData = load(nuclearMaskFile);
     catch ME
         fprintf(' ! getNuclearData [%s] %s\n', ME.identifier, ME.message);
+        return
     end
     
-    nuclearData.nuclearAreaPixel = nucData.nuclearArea; % Vector of 1 x timepoints 
-    nuclearData.idxToFrameNuc = nucData.idxToFrame; % Vector of 1 x timepoints
+    nuclearAreaPixel = nucData.nuclearArea(:); % Vector of 1 x timepoints 
+    idxToFrameNuc = nucData.idxToFrame(:); % Vector of 1 x timepoints
     
     % sanity check, frame consistency
-    assert(all(tm.FRAME == nuclearData.idxToFrameNuc'));
+    assert(all(tm.FRAME == idxToFrameNuc));
 
     % Append the obtained data to the tracking table.
-    tm.NPIXEL_NUC = nuclearData.nuclearAreaPixel;
+    tm.NPIXEL_NUC = nuclearAreaPixel;
 
     % Judge whether there are positive nuclear signal pixels
-    if max(nuclearData.nuclearAreaPixel) ~= 0
+    if max(nuclearAreaPixel) ~= 0
         nucleiCount = 1;
         fprintf('-- Nuclear object detected \n')
         if automaticNucleiCount
             [nucleiCount, nucleiCountSeries] = postprocessing.detectMultiNuclei(nuclearMaskFile);
-            tm.NUCLEI_COUNT = nucleiCountSeries';
+            tm.NUCLEI_COUNT = nucleiCountSeries(:);
         end
    
     else

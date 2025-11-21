@@ -122,18 +122,18 @@ end
         % ---- Quantification of nuclear (NLS) data ----
         % If spermCondition true, perform nuclear quantification.
         if spermCondition
-            %try
+            try
                 % (Assume nuclearSegmentation already processes the necessary .mat files.)
                 % [tm_updated, tp_updated, nucleiCount] = postprocessing.getNuclearData(db.croppedImages, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
                 [tm, tp, nucleiCount] = postprocessing.getNuclearData(db, dropletID, tm, tp, nucleiCount, automaticNucleiCount);
-            %catch
-                %fprintf(" - Failed. getNuclearData\n");
+            catch
+                fprintf(" - Failed. getNuclearData\n");
                 %disp(ME.identifier);
                 %rethrow(ME);
                 %fprintf(" - Ignored. .mat file not found.\n");
 
-                %continue;
-            %end
+                continue;
+            end
         else
             nucleiCount = NaN;
             fprintf(" - cytoplasm only");

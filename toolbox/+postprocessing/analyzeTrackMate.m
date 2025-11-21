@@ -1,4 +1,4 @@
-function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ratDen, frameToMin, forceIgnore)
+function [trackMate, trackPeaks, valid_ids, trackNoPeaks] = analyzeTrackMate(db, ratNum, ratDen, frameToMin, forceIgnore)
 % analyzeTrackMate Processes TrackMate spots data and detects periodic peaks.
 %
 %   [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ratDen, frameToMin, forceIgnore)
@@ -52,47 +52,52 @@ function [trackMate, trackPeaks, trackNoPeaks] = analyzeTrackMate(db, ratNum, ra
     end
 
     % Peak detection
-    ids = unique(trackMate.TRACK_ID);
+    ids_all = unique(trackMate.TRACK_ID);
     cnt = 0;
     trackPeaks = table();
     trackNoPeaks = table();
     
+    % ids that were not listed in fi_table
+    preIgnored = unique(forceIgnore.DropID(forceIgnore.PosID == target_position));
+    ids = setdiff(ids_all, preIgnored);
+
     for i = 1:length(ids)
 
         track = sortrows(trackMate(trackMate.TRACK_ID == ids(i), :), "FRAME");
-                
+
         t = track.FRAME;
-        preIgnored = forceIgnore.DropID(forceIgnore.PosID == target_position);
-        if ~ismember(ids(i), preIgnored)
-            try
-                pidx = postprocessing.findPeriodicPeaks(track.MAIN_SIGNAL, frameToMin);
-            catch
-                if flagFRET
-                    fprintf("ID:%d - No ratio column\n", ids(i));
-                else
-                    fprintf("ID:%d - Invalid peaks\n", ids(i));
-                end
-                trackNoPeaks = [trackNoPeaks; track];
-                continue;
-            
+        try
+            pidx = postprocessing.findPeriodicPeaks(track.MAIN_SIGNAL, frameToMin);
+        catch
+            if flagFRET
+                fprintf("ID:%d - No ratio column\n", ids(i));
+            else
+                fprintf("ID:%d - Invalid peaks\n", ids(i));
             end
-            
-            if isempty(pidx) || all(isnan(pidx(:)))
-                %fprintf("ID:%d  - No peaks\n", ids(i));
-                trackNoPeaks = [trackNoPeaks; track];
-                continue;
-            end
-            
-            tpoints = array2table([pidx(:,1), pidx(:,2), pidx(:,3), t(pidx(:,1)), t(pidx(:,2)), t(pidx(:,3))], ...
-                                   'VariableNames', {'START_INDEX','END_INDEX','TROUGH_INDEX','START_FRAME','END_FRAME','TROUGH_FRAME'});
-            labels = array2table([repmat(ids(i), height(tpoints), 1), (1:height(tpoints))'], ...
-                                 'VariableNames', {'TRACK_ID','CYCLE_ID'});
-            trackPeaks = [trackPeaks; [labels, tpoints]];
-            cnt = cnt + 1;
-            %fprintf("\n");
-        else
-            %fprintf("ID:%d - found in force_ignored \n", ids(i));
+            trackNoPeaks = [trackNoPeaks; track];
+            continue;
+
         end
+
+        if isempty(pidx) || all(isnan(pidx(:)))
+            %fprintf("ID:%d  - No peaks\n", ids(i));
+            trackNoPeaks = [trackNoPeaks; track];
+            continue;
+        end
+
+        tpoints = array2table([pidx(:,1), pidx(:,2), pidx(:,3), t(pidx(:,1)), t(pidx(:,2)), t(pidx(:,3))], ...
+            'VariableNames', {'START_INDEX','END_INDEX','TROUGH_INDEX','START_FRAME','END_FRAME','TROUGH_FRAME'});
+        labels = array2table([repmat(ids(i), height(tpoints), 1), (1:height(tpoints))'], ...
+            'VariableNames', {'TRACK_ID','CYCLE_ID'});
+        trackPeaks = [trackPeaks; [labels, tpoints]];
+        cnt = cnt + 1;
+        %fprintf("\n");
     end
-    fprintf("%d / %d droplets with valid signals\n", cnt, length(ids));
+    if ~isempty(trackPeaks)
+        valid_ids = unique(trackPeaks.TRACK_ID);
+        fprintf("%d / %d droplets with oscillatory signals\n", cnt, length(ids));
+    else
+        valid_ids = [];
+        fprintf("0 droplets with oscillatory signals\n", cnt, length(ids));
+    end
 end

@@ -48,8 +48,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     dnaSumIntQ90         = nan(nCycles, 1);
     dnaPixelsQ90         = nan(nCycles, 1);
     dnaIncRateCoeff      = nan(nCycles, 1);
-    nucPixelsQ90_MOD     = nan(nCycles, 1);
-    dnaSumIntQ90_MOD     = nan(nCycles, 1);
+    %nucPixelsQ90_MOD     = nan(nCycles, 1);
+    %dnaSumIntQ90_MOD     = nan(nCycles, 1);
     
     for k = 1:nCycles
         startidx = tp.START_INDEX(k);       % start index information in peak table for the droplet of interest
@@ -64,14 +64,14 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             else
                 intend = [];
             end
-
+            
             % Collect sum of nuclear area
             nucAreas = cycleData.NPIXEL_NUC ./ (pixelToUm^2); % time course of nuclear area
             %valid = ~isnan(nucAreas);
             t = frameToMin * cycleData.FRAME;
             t = t(intstart:intend);
             nucAreas = nucAreas(intstart:intend);
-
+            
             % Compute Nuclear Area increase rate via linear fitting if enough
             % data points exist.
             if numel(t) > 5
@@ -84,6 +84,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             else
                 nucAreaIncRateCoeff(k) = nan;
             end
+            
 
         else
             intstart = [];
@@ -125,8 +126,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             nucPixelsQ90(k)         = nan;
             dnaSumIntQ90(k)         = nan;
             dnaPixelsQ90(k)         = nan;
-            nucPixelsQ90_MOD(k)     = nan;
-            dnaSumIntQ90_MOD(k)     = nan;
+            %nucPixelsQ90_MOD(k)     = nan;
+            %dnaSumIntQ90_MOD(k)     = nan;
             
         else
             interphaseStartFrame(k) = cycleData.FRAME(intstart);
@@ -134,8 +135,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
             nucPixelsQ90(k) = quantile(intData.NPIXEL_NUC, 0.9);
             dnaSumIntQ90(k) = quantile(intData.SUM_SPERM_HOECHST_INT, 0.9);
             dnaPixelsQ90(k) = quantile(intData.NPIXEL_DNA, 0.9);
-            nucPixelsQ90_MOD(k) = quantile(intData.NPIXEL_NUC_MOD, 0.9);
-            dnaSumIntQ90_MOD(k) = quantile(intData.SUM_NUCLEUS_HORCHST_INT_MOD, 0.9);
+            %nucPixelsQ90_MOD(k) = quantile(intData.NPIXEL_NUC_MOD, 0.9);
+            %dnaSumIntQ90_MOD(k) = quantile(intData.SUM_NUCLEUS_HORCHST_INT_MOD, 0.9);
             
             if ~isempty(intend) && intend > intstart
                 interphaseEndFrame(k) = cycleData.FRAME(intend);
@@ -155,8 +156,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     tp.DNA_NPIXELS_Q90 = dnaPixelsQ90;
     tp.DNA_INC_RATE_COEFF = dnaIncRateCoeff;
     tp.NUC_INC_RATE_COEFF = nucAreaIncRateCoeff;
-    tp.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
-    tp.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
+    %tp.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
+    %tp.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
     
     
     tp_updated = tp;
@@ -171,6 +172,6 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     cycleMetrics.dnaPixelsQ90 = dnaPixelsQ90;
     cycleMetrics.dnaIncRateCoeff = dnaIncRateCoeff;
     cycleMetrics.nucAreaIncRateCoeff = nucAreaIncRateCoeff;
-    cycleMetrics.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
-    cycleMetrics.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
+    %cycleMetrics.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
+    %cycleMetrics.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
 end

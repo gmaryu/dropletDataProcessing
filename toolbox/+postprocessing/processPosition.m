@@ -72,7 +72,7 @@ arguments
 end
 
     %% Analyze the TrackMate data for this position.
-    [trackMate, trackPeaks, trackNoPeaks] = postprocessing.analyzeTrackMate(db, FRETNumerator, FRETDenominator, frameToMin, forceIgnore);
+    [trackMate, trackPeaks, valid_ids, trackNoPeaks] = postprocessing.analyzeTrackMate(db, FRETNumerator, FRETDenominator, frameToMin, forceIgnore);
 
     % Ensure sperm count file exists.
     if ~isfile(db.spermCountCsv)
@@ -88,7 +88,7 @@ end
         % Here we call nuclearQuantification on just this position to segment nuclei and DNA.
         % cropBrightChunk
         % cropDNAMask
-        segmentation.nuclearSegmentation(db, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
+        segmentation.nuclearSegmentation(db, valid_ids, nucChannel, dnaChannel, overwriteNucMask, overwriteDNAInfo);
     end
     
 
