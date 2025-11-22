@@ -1,8 +1,8 @@
 function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, posId, tm)
 
-% getNuclearData Load nuclear and DNA quantification data for a droplet.
+% getCompartmentIntensity measure nuclear, cytoplasmic, and whole area fluorescent intensity for a droplet.
 %
-%   nuclearData = getNuclearData(db, posId, dropletID, nucChannel, dnaChannel, automaticSpermCount, hoechstoffset)
+%   [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, posId, tm)
 %
 % This function constructs the filenames for the nuclear and DNA (Hoechst) data based on
 % the croppedImages directory, position, and droplet ID. It then loads the corresponding .mat
@@ -64,6 +64,7 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         % nucMask = NucDNAMask; % use this line in future. Some NucDNAMask
         % calculated before 2025/09/18 is wrong. Use the line below  to
         % correct.
+        nucMask_original = nucMask;
         nucMask = nucMask | dnaMask;
     else
         fprintf('-- No DNA mask .mat file');
@@ -170,19 +171,27 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         y2 = num2 ./ den2;   
         varName2 = matlab.lang.makeValidName(['CytMean_' ch]); 
 
+        num3 = squeeze(sum(sum(I .* cast(labelstack,'like',I), 1), 2)); 
+        den3 = squeeze(sum(sum(labelstack, 1), 2));                 
+        den3(den3==0) = NaN;                                     
+        y3 = num3 ./ den3;   
+        varName3 = matlab.lang.makeValidName(['WholeMean_' ch]); 
+
         tm.(varName1) = y1;
         tm.(varName2) = y2;
+        tm.(varName3) = y3;
     end
 
     % --- DNA related information (previously in getDNAData)
     if exist('dnaMask','var') && ~isempty(dnaMask)
-        nucHoechstInt = double(data.DAPI) .* nucMask;
+        nucHoechstInt = double(data.DAPI) .* nucMask_original;
         dnaHoechstInt = double(data.DAPI) .* dnaMask;
         nucHoechstInt_mod = double(data.DAPI) .* nucMask;
 
         tm.SUM_SPERM_HOECHST_INT = squeeze(sum(sum(dnaHoechstInt, 1), 2));
         tm.SUM_NUCLEUS_HOECHST_INT = squeeze(sum(sum(nucHoechstInt, 1), 2));
         tm.SUM_NUCLEUS_HORCHST_INT_MOD = squeeze(sum(sum(nucHoechstInt_mod, 1), 2));
+        tm.NPIXEL_NUC = squeeze(sum(sum(nucMask_original, 1), 2));
         tm.NPIXEL_DNA = squeeze(sum(sum(dnaMask, 1), 2));
         tm.NPIXEL_NUC_MOD = squeeze(sum(sum(nucMask, 1), 2));
 
