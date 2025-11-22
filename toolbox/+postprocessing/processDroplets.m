@@ -171,7 +171,9 @@ end
         %     fprintf(" - No DNA staining -");
         % end
 
-
+        % --- Measure droplet pixel size after single droplet cropping
+        tm = postprocessing.getDropletNpixels(db, dropletID, posId, tm);
+        
         % --- Measure compartment specific mean fluorescent intensity and
         % calculate FRET/CFP ratio ---
         if spermCondition
@@ -179,7 +181,7 @@ end
         else
             spermCount = NaN;
             nucleiCount = NaN;
-            tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
+            %tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
         end
         
         % --- Process cycle data for current droplet.

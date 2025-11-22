@@ -194,6 +194,7 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         tm.NPIXEL_NUC = squeeze(sum(sum(nucMask_original, 1), 2));
         tm.NPIXEL_DNA = squeeze(sum(sum(dnaMask, 1), 2));
         tm.NPIXEL_NUC_MOD = squeeze(sum(sum(nucMask, 1), 2));
+        %tm.NPIXEL_DROPLET = squeeze(sum(sum(labelstack, 1), 2));
 
         % Judge whether there are positive hoechst signal pixels
         if max(dnaData.hoechstArea) ~= 0
@@ -216,6 +217,8 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
                 tm.NPIXEL_NUC = NaN*ones(size(tm,1),1);
                 tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
                 tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
+                %tm.NPIXEL_DROPLET = squeeze(sum(sum(labelstack, 1), 2));
+
                 fprintf('- No colocalization');
             end
         else
@@ -227,10 +230,12 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
             tm.NPIXEL_NUC = NaN*ones(size(tm,1),1);
             tm.SUM_NUCLEUS_HORCHST_INT_MOD = NaN*ones(size(tm,1),1);
             tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
+            %tm.NPIXEL_DROPLET = squeeze(sum(sum(labelstack, 1), 2));
+
             fprintf('- No DNA mask');
         end
     end
 
     %% obtain droplet area in pixel
-    tm.AREA_NPIXEL = squeeze(sum(labelstack,[1 2]));
+    %tm.AREA_NPIXEL = squeeze(sum(labelstack,[1 2]));
 end

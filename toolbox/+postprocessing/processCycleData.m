@@ -42,7 +42,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     interphaseStartFrame = nan(nCycles, 1);
     interphaseEndFrame   = nan(nCycles, 1);
     areaPixelsMedian     = nan(nCycles, 1);
-    areaMedian           = nan(nCycles, 1);
+    %areaMedian           = nan(nCycles, 1);
     nucAreaIncRateCoeff  = nan(nCycles, 1);
     nucPixelsQ90         = nan(nCycles, 1);
     dnaSumIntQ90         = nan(nCycles, 1);
@@ -92,8 +92,9 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         end
         
         % Compute median area (convert to µm²).
-        areaPixelsMedian(k) = median(cycleData.AREA ./ (pixelToUm^2)); % median droplet size
-        areaMedian(k) = median(cycleData.AREA); % median droplet size
+        %areaPixelsMedian(k) = median(cycleData.AREA ./ (pixelToUm^2)); % median droplet size
+        areaPixelsMedian(k) = median(cycleData.NPIXEL_DROPLET); % median droplet size
+        %areaMedian(k) = median(cycleData.AREA); % median droplet size
         % Compute time vector in minutes.
         %t = frameToMin * cycleData.FRAME;
         
@@ -150,7 +151,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     tp.INTERPHASE_START_FRAME = interphaseStartFrame;
     tp.INTERPHASE_END_FRAME = interphaseEndFrame;
     tp.AREA_NPIXELS_MEDIAN = areaPixelsMedian;
-    tp.AREA_DROPLET_MEDIAN = areaMedian;
+    %tp.AREA_DROPLET_MEDIAN = areaMedian;
     tp.NUC_NPIXELS_Q90 = nucPixelsQ90;
     tp.DNA_SUM_INT_Q90 = dnaSumIntQ90;
     tp.DNA_NPIXELS_Q90 = dnaPixelsQ90;
@@ -166,7 +167,7 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     cycleMetrics.interphaseStartFrame = interphaseStartFrame;
     cycleMetrics.interphaseEndFrame = interphaseEndFrame;
     cycleMetrics.areaPixelsMedian = areaPixelsMedian;
-    cycleMetrics.AREA_DROPLET_MEDIAN = areaMedian;
+    %cycleMetrics.AREA_DROPLET_MEDIAN = areaMedian;
     cycleMetrics.nucPixelsQ90 = nucPixelsQ90;
     cycleMetrics.dnaSumIntQ90 = dnaSumIntQ90;
     cycleMetrics.dnaPixelsQ90 = dnaPixelsQ90;
