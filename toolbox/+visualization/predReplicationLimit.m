@@ -1,6 +1,6 @@
-function dataSet = predReplicationLimit(dataSet)
+function dataSet = predReplicationLimit(dataSet, d_rate)
 % Extract dilution rate
-d_rate = 0.7;
+% d_rate = 0.7;
 
 %dataSet = control_nuc;
 info = dataSet.info;
@@ -16,12 +16,12 @@ for i = 1:size(info,1)
         tmpDia = info.ORIGINAL_MED_DIAMETER(i);
 
         tmpCycles = cycle(cycle.POS_ID == tmpP & cycle.TRACK_ID == tmpD, :);
-        DNACR1 = tmpCycles.DNACR(1);
+        DNACR1 = tmpCycles.DNACR_DNA(1);
 
         D = 1000;
         N = 12;
         m = info.SPERM_COUNT(i);
-        k = log2(1+(2/m)*(tmpDia/D).^3*((2.^N)-1)*d_rate);
+        k = log2(1+(2/m)*d_rate*(tmpDia/D).^3*((2.^N)-1));
 
         info.rmax(i) = k;
         info.rmax_DNACR(i) = (2^k)*DNACR1;

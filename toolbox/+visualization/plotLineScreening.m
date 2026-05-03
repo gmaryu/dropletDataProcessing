@@ -92,7 +92,7 @@ for i = 1:size(info,1)
             nexttile(3);
             plot(tmpTime,tmpSignal3);
             yline(rlimit_DNAVR,'r');
-            yline(2.^(0:fix(rlimit))*tmpCyc.DNACR(1),'--');
+            yline(2.^(0:fix(rlimit))*tmpCyc.DNACR_NUC(1),'--');
             xline(unique([tmpCyc.START_INDEX*dataSet.FrameToMin;tmpCyc.END_INDEX*dataSet.FrameToMin]),':');
             %ylim([0,rlimit_DNAVR+0.1]);
             title(sprintf('ReplicationLimit: %d',rlimit));

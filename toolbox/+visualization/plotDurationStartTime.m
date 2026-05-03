@@ -23,6 +23,7 @@ function f = plotDurationStartTime(dataSet, varargin)
     addParameter(p, 'MarkerSize', 3, @(x)isnumeric(x) && isscalar(x) && x>0);
     addParameter(p, 'Color', 'k', @(c)ischar(c) || isstring(c) || (isnumeric(c) && numel(c)==3));
     parse(p, dataSet, varargin{:});
+    LINEWIDTH = 2;
     
     % ---- Target Figure Pannel ----
     newFig      = p.Results.newFig;
