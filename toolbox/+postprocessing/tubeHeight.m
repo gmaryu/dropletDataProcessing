@@ -13,13 +13,19 @@ cntrl_noSperm = 0:2;
 qc = postprocessing.tubeHeight(qc, cntrl_noSperm, []);
 %}
 dataSet.info.TUBE_HEIGHT = NaN(length(dataSet.info.POS_ID),1);
-for i = 1:length(dataSet.info.POS_ID)
-    tmp_p = dataSet.info.POS_ID(i);
-    if ismember(tmp_p, pos_100)
-       dataSet.info.TUBE_HEIGHT(i) = 100;
-    elseif ismember(tmp_p, pos_200)
-       dataSet.info.TUBE_HEIGHT(i) = 200;
+dataSet.timeSeries.TUBE_HEIGHT = NaN(length(dataSet.timeSeries.POS_ID),1);
+
+positions = unique(dataSet.info.POS_ID);
+
+for i = 1:length(positions)
+    index_info = dataSet.info.POS_ID == positions(i);
+    index_ts = dataSet.timeSeries.POS_ID == positions(i);
+    if ismember(positions(i), pos_100)
+       dataSet.info.TUBE_HEIGHT(index_info) = 100;
+       dataSet.timeSeries.TUBE_HEIGHT(index_ts) = 100;
+    elseif ismember(positions(i), pos_200)
+       dataSet.info.TUBE_HEIGHT(index_info) = 200;
+       dataSet.timeSeries.TUBE_HEIGHT(index_ts) = 200;
     end
 end
-
 end
