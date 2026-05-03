@@ -1,5 +1,5 @@
 function dataSet = calcCycleAdditionalFeatures(dataSet)
-dnarenormfactor = 1; % 1e7 factor to make numbers not too big
+dnarenormfactor = 1e7; % 1e7 factor to make numbers not too big
 
 % --- make IGNORE column if necessary ---
 if ~ismember("IGNORED", dataSet.info.Properties.VariableNames)
@@ -33,6 +33,13 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
         disp('Added a new field "NUC_INC_RATE_COEFF"');
     end
 
+    flag_rateCoffDNA = 0;
+    if ~ismember('DNA_INC_RATE_COEFF',tp.Properties.VariableNames)
+        flag_rateCoffDNA = 1;
+        disp('Added a new field "DNA_INC_RATE_COEFF"');
+    end
+    
+
     flag_NUC_NPIXELS_MOD_Q90 = 0;
     if ~ismember('NUC_NPIXELS_MOD_Q90',tp.Properties.VariableNames)
         flag_NUC_NPIXELS_MOD_Q90 = 1;
@@ -43,6 +50,12 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
     if ~ismember('DNA_SUM_INT_MOD_Q90',tp.Properties.VariableNames)
         flag_DNA_SUM_INT_MOD_Q90 = 1;
         disp('Added a new field "DNA_SUM_INT_MOD_Q90"');
+    end
+
+    flag_DNA_SUM_INT_DNA_Q90 = 0;
+    if ~ismember('DNA_SUM_INT_DNA_Q90',tp.Properties.VariableNames)
+        flag_DNA_SUM_INT_DNA_Q90 = 1;
+        disp('Added a new field "DNA_SUM_INT_DNA_Q90"');
     end
 
     flag_NSURF_Q90 = 0;
@@ -61,9 +74,11 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
     % --- number of loop and data allocation ---
     nCycles              = height(tp); % number of peaks
     
-    nucAreaIncRateCoeff  = nan(nCycles, 1);
+    nucVolIncRateCoeff  = nan(nCycles, 1);
+    nucDNAIncRateCoeff  = nan(nCycles, 1);
     nucNpixelMODQ90      = nan(nCycles, 1);
     nucDNAintMODQ90      = nan(nCycles, 1);
+    nucDNAintDNAQ90      = nan(nCycles, 1);
     nucSurfQ90           = nan(nCycles, 1);
     nucVolQ90            = nan(nCycles, 1);
 
@@ -76,6 +91,7 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
             % time course data for the target droplet
             tmp_tm = tm(tm.POS_ID==posid & tm.TRACK_ID==trackid,:);
 
+            
             % define START and END time. Use whole cycle if there is no nuclear mask.
             if ~isnan(tp.INTERPHASE_START_FRAME(k))
                 startidx = find(tmp_tm.FRAME == tp.INTERPHASE_START_FRAME(k));
@@ -95,14 +111,26 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
             % --- Calc stats ---
             if flag_rateCoff
                 % Compute Nuclear Area increase rate via linear fitting if enough data points exist.
-                p = polyfit(cycleData.FRAME, cycleData.NPIXEL_NUC_MOD, 1);
+                p = polyfit(cycleData.FRAME, cycleData.NUC_VOLUMEUM3, 1);
                 if p(1) > 0
-                    nucAreaIncRateCoeff(k) = p(1);
+                    nucVolIncRateCoeff(k) = p(1);
                 else
-                    nucAreaIncRateCoeff(k) = nan;
+                    nucVolIncRateCoeff(k) = nan;
                 end
             else
-                nucAreaIncRateCoeff(k) = nan;
+                nucVolIncRateCoeff(k) = nan;
+            end
+
+            if flag_rateCoffDNA
+                % Compute Nuclear Area increase rate via linear fitting if enough data points exist.
+                p = polyfit(cycleData.FRAME, cycleData.SUM_NUCLEUS_HOECHST_INT, 1);
+                if p(1) > 0
+                    nucDNAIncRateCoeff(k) = p(1);
+                else
+                    nucDNAIncRateCoeff(k) = nan;
+                end
+            else
+                nucDNAIncRateCoeff(k) = nan;
             end
 
             if flag_NUC_NPIXELS_MOD_Q90
@@ -113,6 +141,12 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
 
             if flag_DNA_SUM_INT_MOD_Q90
                 nucDNAintMODQ90(k) = quantile(cycleData.SUM_NUCLEUS_HORCHST_INT_MOD, 0.9);
+            else
+                nucDNAintMODQ90(k) = nan;
+            end
+
+            if flag_DNA_SUM_INT_DNA_Q90
+                nucDNAintDNAQ90(k) = quantile(cycleData.SUM_SPERM_HOECHST_INT, 0.9);
             else
                 nucDNAintMODQ90(k) = nan;
             end
@@ -134,13 +168,19 @@ if any(~isnan(tp.("NUC_NPIXELS_Q90")))
     
     % --- add column to the cycle information table ---
     if flag_rateCoff
-        tp.NUC_INC_RATE_COEFF = nucAreaIncRateCoeff;
+        tp.NUC_INC_RATE_COEFF = nucVolIncRateCoeff;
+    end
+    if flag_rateCoffDNA
+        tp.DNA_INC_RATE_COEFF = nucDNAIncRateCoeff;
     end
     if flag_NUC_NPIXELS_MOD_Q90
         tp.NUC_NPIXELS_MOD_Q90 = nucNpixelMODQ90;
     end
     if flag_DNA_SUM_INT_MOD_Q90
         tp.DNA_SUM_INT_MOD_Q90 = nucDNAintMODQ90;
+    end
+    if flag_DNA_SUM_INT_DNA_Q90
+        tp.DNA_SUM_INT_DNA_Q90 = nucDNAintDNAQ90;
     end
     if flag_NSURF_Q90
         tp.NSURF_Q90 = nucSurfQ90;
@@ -153,17 +193,20 @@ end
 
 tp.START_MINUTE = tp.START_FRAME * FrameToMin; % minute
 tp.DURATION = (tp.END_FRAME - tp.START_FRAME) * FrameToMin; % minute
-tp.DNA_INC_RATE_COEFF = tp.DNA_INC_RATE_COEFF / log10(dnarenormfactor); % a.u. (sum px) / minute
+if  ismember('DNA_SUM_INT_DNA_Q90',tp.Properties.VariableNames) && any(~isnan(tp.DNA_SUM_INT_DNA_Q90))
+    tp.DNA_INC_RATE_COEFF = tp.DNA_INC_RATE_COEFF / log10(dnarenormfactor); % a.u. (sum px) / minute
+end
 if  ismember('NUC_NPIXELS_Q90',tp.Properties.VariableNames) && any(~isnan(tp.NUC_NPIXELS_Q90))
     tp.NCVR_ORI = power(tp.NUC_NPIXELS_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3 / 2); % n.d.
     tp.NCVR = power(tp.NUC_NPIXELS_MOD_Q90 ./ tp.AREA_NPIXELS_MEDIAN, 3 / 2); % n.d.
     tp.DNACR_ORI = tp.DNA_SUM_INT_Q90 ./ visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm) / dnarenormfactor; % a.u (sum px) / um^3
-    tp.DNACR = tp.DNA_SUM_INT_MOD_Q90 ./ visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm) / dnarenormfactor; % a.u (sum px) / um^3
-    tp.FC_DNA = visualization.foldChangeDNA(tp);
+    tp.DNACR_NUC = tp.DNA_SUM_INT_MOD_Q90 ./ visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm) / dnarenormfactor; % a.u (sum px) / um^3
+    tp.DNACR_DNA = tp.DNA_SUM_INT_DNA_Q90 ./ visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm) / dnarenormfactor; % a.u (sum px) / um^3
+    tp.FC_DNA = visualization.foldChangeDNA(tm, tp);
 end
 tp.FC_Period = visualization.foldChangePeriod(tp);
 tp.VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm);
-tp.MARKERSIZE = (log10(visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm)) - 5.25) * 3; % log um3 volume roughly within 5-7
+tp.MARKERSIZE = (log10(visualization.convertAreaPixelsToVolume(tp.AREA_NPIXELS_MEDIAN, PixelToUm)) - 5.25) * 5; % log um3 volume roughly within 5-7
 tp.MARKERSIZE(tp.MARKERSIZE < 0.5, :) = 0.5;
 dataSet.cycle = tp;
 end
