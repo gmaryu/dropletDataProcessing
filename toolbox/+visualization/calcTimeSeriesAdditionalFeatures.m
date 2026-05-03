@@ -23,33 +23,42 @@ tm = dataSet.timeSeries;
 %% Update existing features
 tm.MINUTE = tm.FRAME * dataSet.FrameToMin; % minute
 
-% --- check if a new column has to be calculated / pixel number of droplet---- 
-if ~ismember('AREA_NPIXEL', string(tm.Properties.VariableNames))
-    disp('New column AREA_NPIXEL added');
-    tm.AREA_NPIXEL = tm.AREA ./ (dataSet.PixelToUm^2);
-end
-tm.VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tm.AREA_NPIXEL, dataSet.PixelToUm); % um^3
+% --- check if a new column has to be calculated / pixel number of droplet----
 
+% if ~ismember('AREA_NPIXEL', string(tm.Properties.VariableNames))
+%     disp('New column AREA_NPIXEL added');
+%     tm.AREA_NPIXEL = tm.AREA ./ (dataSet.PixelToUm^2);
+% end
+if ismember("NPIXEL_DROPLET", string(tm.Properties.VariableNames))
+    tm.DIAMETER = 2 * sqrt(tm.NPIXEL_DROPLET * dataSet.PixelToUm^2 / pi); 
+else
+    tm.DIAMETER = 2 * tm.RADIUS;
+end
+tm.ORIGINAL_MED_DIAMETER = postprocessing.originalDiameter(tm.DIAMETER, tm.TUBE_HEIGHT);
+tm.VOLUMEUM3 = (4/3)*pi*(tm.ORIGINAL_MED_DIAMETER./2).^3; %.convertAreaPixelsToVolume(tm.DROPLET_NPIXEL, dataSet.PixelToUm); % um^3
+
+%
 % --- correct old "NPIXEL_NUC_MOD" and "SUM_NUCLEUS_HORCHST_INT_MOD"
 if ismember('NPIXEL_NUC_MOD', string(tm.Properties.VariableNames))
-    if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
-        tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
-        disp('NPIXEL_NUC_MOD is fixed')
-    end
+    % if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
+    %     tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
+    %     disp('NPIXEL_NUC_MOD is fixed')
+    % end
 
     tm.NUC_VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tm.NPIXEL_NUC_MOD, dataSet.PixelToUm); % um^3
-    tm.NCVR = power(tm.NPIXEL_NUC_MOD./ tm.AREA_NPIXEL, 3/2); % n.d.
+    tm.NCVR = tm.NUC_VOLUMEUM3 ./ tm.VOLUMEUM3;
     tm.NUC_SURF_AREA = 4.*tm.NPIXEL_NUC_MOD.*dataSet.PixelToUm^2;
 end
 
 if ismember('SUM_NUCLEUS_HORCHST_INT_MOD', string(tm.Properties.VariableNames))
-    if any(tm.SUM_NUCLEUS_HORCHST_INT_MOD ~= max(tm.SUM_SPERM_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT))
-        tm.SUM_NUCLEUS_HORCHST_INT_MOD = max(tm.SUM_SPERM_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT);
-        disp('SUM_NUCLEUS_HORCHST_INT_MOD is fixed')
-    end
+    % if any(tm.SUM_NUCLEUS_HORCHST_INT_MOD ~= max(tm.SUM_SPERM_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT))
+    %     tm.SUM_NUCLEUS_HORCHST_INT_MOD = max(tm.SUM_SPERM_HOECHST_INT, tm.SUM_NUCLEUS_HOECHST_INT);
+    %     disp('SUM_NUCLEUS_HORCHST_INT_MOD is fixed')
+    % end
 
-    tm.DNACR = tm.SUM_NUCLEUS_HORCHST_INT_MOD ./ tm.VOLUMEUM3 / dnarenormfactor; % a.u (sum px) / um^3
+    tm.DNACR_NUC = tm.SUM_NUCLEUS_HORCHST_INT_MOD ./ tm.VOLUMEUM3 / dnarenormfactor; % a.u (sum px) / um^3
+    tm.DNACR_DNA = tm.SUM_SPERM_HOECHST_INT ./ tm.VOLUMEUM3 / dnarenormfactor;
 end
- 
+
 dataSet.timeSeries = tm;
 end
