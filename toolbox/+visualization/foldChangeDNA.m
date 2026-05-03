@@ -1,22 +1,5 @@
-function output = foldChangeDNA(dataCycle, varargin)
-% remapCycleIdByStartIndex - Ignore early peaks (START_INDEX<=thresh) and
-%                            re-label CYCLE_ID per TRACK_ID in START_INDEX order.
-%
-% Effect:
-%   - Rows with START_INDEX <= thresh (default 5) are flagged IGNORED (union with existing flags).
-%   - Within each TRACK_ID, non-ignored rows are assigned CYCLE_ID = 1,2,3,... by
-%     ascending START_INDEX.
-%   - IGNORED rows receive CYCLE_ID = NaN (so downstream code can skip them).
-%
-% Inputs:
-%   dataSet.cycle : table with columns TRACK_ID, START_INDEX, CYCLE_ID (numeric), IGNORED (logical/0-1)
-%
-% Name-Value:
-%   'StartIndexMin' (5)      : threshold; START_INDEX <= this is ignored
-%   'RespectIgnored' (true)  : if true, existing IGNORED==true stays ignored
-%
-% Output:
-%   dataSet.cycle : updated table with CYCLE_ID overwritten
+function output = foldChangeDNA(tm, tp, varargin)
+
 
 % ---------- parse options ----------
 p = inputParser;
@@ -26,7 +9,7 @@ parse(p,varargin{:});
 thresh = p.Results.StartIndexMin;
 respectIgnored = p.Results.RespectIgnored;
 
-T = dataCycle;
+T = tp;
 %%
 % ---------- safety: ensure required columns exist ----------
 req = ["TRACK_ID","START_INDEX","CYCLE_ID","DNA_SUM_INT_MOD_Q90"];
@@ -44,19 +27,25 @@ end
 % ---------- stable re-numbering per TRACK_ID ----------
 % Keep original order index, then sort by TRACK_ID, START_INDEX to define sequence
 
-% Identify first row of each track after sorting (group boundary)
-isFirstOfTrack = [true; diff(T.TRACK_ID)~=0];
-grp = cumsum(isFirstOfTrack);            % group id per row
+uniquePairs = unique(tm(:, {'POS_ID', 'TRACK_ID'}), 'rows');
 
-ids = unique(grp);
-for i = 1:numel(ids)
-    % disp(i);
-    tmpDNAQ90 = T.DNA_SUM_INT_MOD_Q90(grp==ids(i));
-    if length(tmpDNAQ90) > 1
+for i = 1:size(uniquePairs,1)
+    % time series data
+    dna_int = tm.SUM_SPERM_HOECHST_INT(tm.POS_ID == uniquePairs.POS_ID(i) & tm.TRACK_ID == uniquePairs.TRACK_ID(i));
+
+    % peak data
+    tmpDNAQ90 = T.DNA_SUM_INT_MOD_Q90(T.POS_ID == uniquePairs.POS_ID(i) & T.TRACK_ID == uniquePairs.TRACK_ID(i)); 
+
+    firstPeakIdx = min(T.START_INDEX(T.POS_ID == uniquePairs.POS_ID(i) & T.TRACK_ID == uniquePairs.TRACK_ID(i)));
+    if length(tmpDNAQ90) > 1 & firstPeakIdx < 20 % short interphase before the first peak
         fc = [1; tmpDNAQ90(2:end)./tmpDNAQ90(1:end-1)];
-        T.FC_DNA(grp==ids(i)) = fc;
+        T.FC_DNA(T.POS_ID == uniquePairs.POS_ID(i) & T.TRACK_ID == uniquePairs.TRACK_ID(i)) = fc;
+    elseif length(tmpDNAQ90) > 1 & firstPeakIdx >= 20 % enough frames before the first peak
+        dna_before_1st = median(dna_int(1:firstPeakIdx));
+        fc = [tmpDNAQ90(1)/dna_before_1st; tmpDNAQ90(2:end)./tmpDNAQ90(1:end-1)];
+        T.FC_DNA(T.POS_ID == uniquePairs.POS_ID(i) & T.TRACK_ID == uniquePairs.TRACK_ID(i)) = fc;
     else
-        T.FC_DNA(grp==ids(i)) = 1;
+        T.FC_DNA(T.POS_ID == uniquePairs.POS_ID(i) & T.TRACK_ID == uniquePairs.TRACK_ID(i)) = NaN;
     end
 end
 T.CYCLE_ID(T.IGNORED) = NaN;
