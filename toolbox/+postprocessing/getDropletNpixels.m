@@ -32,7 +32,7 @@ function tm = getDropletNpixels(db, dropletID, posId, tm)
         posId   (1,1) double
         tm  table
     end
-    fprintf('    Intensity Quantification: ')
+    %fprintf('    Intensity Quantification: ')
     %% test params
     % db = database{2};
     % posId = 20;
@@ -55,9 +55,20 @@ function tm = getDropletNpixels(db, dropletID, posId, tm)
     [~,idx] = sort({f.name});
     f = f(idx);
     T = numel(f);
-    [H,W] = size(imread(fullfile(f(1).folder, f(1).name)));
-    stack = zeros(H,W,T);
-    Hmax = size(stack,1); Wmax = size(stack,2);
+
+    Hmax = 0;
+    Wmax = 0;
+    for i = 1:numel(f)
+        fname = fullfile(f(i).folder, f(i).name);
+
+        info = imfinfo(fname);
+        H = info(1).Height;
+        W = info(1).Width;
+
+        Hmax = max(Hmax, H);
+        Wmax = max(Wmax, W);
+    end
+    stack = zeros(Hmax,Wmax,T);
     for t = 1:T
         img = imread(fullfile(f(t).folder, f(t).name));
         h = size(img,1); w = size(img,2);
@@ -67,6 +78,6 @@ function tm = getDropletNpixels(db, dropletID, posId, tm)
     end
 
     %% obtain droplet area in pixel
-    tm.NPIXEL_DROPLET = squeeze(sum(logical(stack),[1 2]));
+    tm.NPIXEL_DROPLET = squeeze(sum(sum(logical(stack), 1), 2));
     
 end
