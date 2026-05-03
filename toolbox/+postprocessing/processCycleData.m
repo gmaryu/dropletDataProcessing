@@ -93,7 +93,11 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
         
         % Compute median area (convert to µm²).
         %areaPixelsMedian(k) = median(cycleData.AREA ./ (pixelToUm^2)); % median droplet size
-        areaPixelsMedian(k) = median(cycleData.NPIXEL_DROPLET); % median droplet size
+        if spermCondition
+            areaPixelsMedian(k) = median(cycleData.NPIXEL_DROPLET); % median droplet size
+        else
+            areaPixelsMedian(k) = NaN; % median droplet size
+        end
         %areaMedian(k) = median(cycleData.AREA); % median droplet size
         % Compute time vector in minutes.
         %t = frameToMin * cycleData.FRAME;
@@ -155,8 +159,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     tp.NUC_NPIXELS_Q90 = nucPixelsQ90;
     tp.DNA_SUM_INT_Q90 = dnaSumIntQ90;
     tp.DNA_NPIXELS_Q90 = dnaPixelsQ90;
-    tp.DNA_INC_RATE_COEFF = dnaIncRateCoeff;
-    tp.NUC_INC_RATE_COEFF = nucAreaIncRateCoeff;
+    %tp.DNA_INC_RATE_COEFF = dnaIncRateCoeff;
+    %tp.NUC_INC_RATE_COEFF = nucAreaIncRateCoeff;
     %tp.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
     %tp.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
     
@@ -171,8 +175,8 @@ function [tp_updated, cycleMetrics] = processCycleData(tp, tm, frameToMin, pixel
     cycleMetrics.nucPixelsQ90 = nucPixelsQ90;
     cycleMetrics.dnaSumIntQ90 = dnaSumIntQ90;
     cycleMetrics.dnaPixelsQ90 = dnaPixelsQ90;
-    cycleMetrics.dnaIncRateCoeff = dnaIncRateCoeff;
-    cycleMetrics.nucAreaIncRateCoeff = nucAreaIncRateCoeff;
+    %cycleMetrics.dnaIncRateCoeff = dnaIncRateCoeff;
+    %cycleMetrics.nucAreaIncRateCoeff = nucAreaIncRateCoeff;
     %cycleMetrics.NUC_NPIXELS_MOD_Q90 = nucPixelsQ90_MOD;
     %cycleMetrics.DNA_SUM_INT_MOD_Q90 = dnaSumIntQ90_MOD;
 end

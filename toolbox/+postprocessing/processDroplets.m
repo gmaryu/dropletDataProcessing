@@ -172,7 +172,9 @@ end
         % end
 
         % --- Measure droplet pixel size after single droplet cropping
-        tm = postprocessing.getDropletNpixels(db, dropletID, posId, tm);
+        if spermCondition
+            tm = postprocessing.getDropletNpixels(db, dropletID, posId, tm);
+        end
         
         % --- Measure compartment specific mean fluorescent intensity and
         % calculate FRET/CFP ratio ---
@@ -181,7 +183,6 @@ end
         else
             spermCount = NaN;
             nucleiCount = NaN;
-            %tm.AREA_NPIXEL = tm.AREA ./ (pixelToUm^2);
         end
         
         % --- Process cycle data for current droplet.

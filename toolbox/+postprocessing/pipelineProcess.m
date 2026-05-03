@@ -90,7 +90,7 @@ end
 output_database = {};
 % Loop through each database entry and process only the selected positions.
 parfor i = 1:length(databases)
-%for i = 1:length(databases)
+% for i = 1:length(databases)
 
     db = databases{i};
 
