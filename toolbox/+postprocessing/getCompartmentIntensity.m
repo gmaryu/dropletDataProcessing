@@ -132,56 +132,82 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         data = rmfield(data,'label');
     end
     
-    % --- Check if FRET pair exist in the color palette ---
-    if ismember('CFP', colors)
-        if ismember('FRET', colors)
-            data.RATIO = double(data.FRET) ./ double(data.CFP);
-        elseif ismember('Custom', colors)
-            data.RATIO = double(data.Custom) ./ double(data.CFP);
+    % --- Check if FRET pair exists in the color palette ---
+    % Do NOT create pixel-wise ratio image here.
+    % Ratio will be calculated later as:
+    %   sum(FRET in mask) / sum(CFP in mask)
+    hasRatio = false;
+    ratioNumeratorChannel = "";
+
+    if isfield(data, 'CFP')
+        if isfield(data, 'FRET')
+            hasRatio = true;
+            ratioNumeratorChannel = "FRET";
+        elseif isfield(data, 'Custom')
+            hasRatio = true;
+            ratioNumeratorChannel = "Custom";
         else
-            warning('CFP exits, but no FRET/Custom channel');
+            warning('CFP exists, but no FRET/Custom channel');
         end
     else
         warning('No CFP channel');
     end
-  
+
     % --- create cytoplasmic area mask ---
     cytMask = labelstack & ~nucMask;
 
     % --- calculate mean intensity in each compartment ---
-    colors=fieldnames(data);
+    % For ordinary channels:
+    %   mean intensity = sum(I in mask) / number of pixels in mask
+    %
+    % For FRET/CFP ratio:
+    %   ratio = sum(FRET in mask) / sum(CFP in mask)
+    % instead of mean(FRET ./ CFP).
+
+    colors = fieldnames(data);
+
+    % Ensure masks are binary logical masks
+    nucMaskBin   = nucMask > 0;
+    cytMaskBin   = cytMask > 0;
+    wholeMaskBin = labelstack > 0;
+
     for c = 1:numel(colors)
         ch = colors{c};
         I = data.(ch);
-        
-        if ~isequal(size(I,1), size(nucMask,1)) || ~isequal(size(I,2), size(nucMask,2)) || ~isequal(size(I,3), size(nucMask,3))
+
+        if ~isequal(size(I,1), size(nucMaskBin,1)) || ...
+                ~isequal(size(I,2), size(nucMaskBin,2)) || ...
+                ~isequal(size(I,3), size(nucMaskBin,3))
             error('Size mismatch: %s stack and mask3D must have the same H×W×T.', ch);
         end
 
-        num1 = squeeze(sum(sum(I .* cast(nucMask,'like',I), 1), 2));
-        den1 = squeeze(sum(sum(nucMask, 1), 2));                    
-        den1(den1==0) = NaN;                                     
-        y1 = num1 ./ den1;   
-        varName1 = matlab.lang.makeValidName(['NucMean_' ch]); 
+        % Nuclear mean intensity
+        y1 = maskedMean3D(I, nucMaskBin);
+        varName1 = matlab.lang.makeValidName(['NucMean_' ch]);
 
+        % Cytoplasmic mean intensity
+        y2 = maskedMean3D(I, cytMaskBin);
+        varName2 = matlab.lang.makeValidName(['CytMean_' ch]);
 
-        num2 = squeeze(sum(sum(I .* cast(cytMask,'like',I), 1), 2)); 
-        den2 = squeeze(sum(sum(cytMask, 1), 2));                 
-        den2(den2==0) = NaN;                                     
-        y2 = num2 ./ den2;   
-        varName2 = matlab.lang.makeValidName(['CytMean_' ch]); 
-
-        num3 = squeeze(sum(sum(I .* cast(labelstack,'like',I), 1), 2)); 
-        den3 = squeeze(sum(sum(labelstack, 1), 2));                 
-        den3(den3==0) = NaN;                                     
-        y3 = num3 ./ den3;   
-        varName3 = matlab.lang.makeValidName(['WholeMean_' ch]); 
+        % Whole droplet / whole compartment mean intensity
+        y3 = maskedMean3D(I, wholeMaskBin);
+        varName3 = matlab.lang.makeValidName(['WholeMean_' ch]);
 
         tm.(varName1) = y1;
         tm.(varName2) = y2;
         tm.(varName3) = y3;
     end
 
+    % --- calculate FRET/CFP ratio as sum numerator / sum CFP ---
+    if hasRatio
+        Fnum = data.(ratioNumeratorChannel);
+        CFP  = data.CFP;
+
+        tm.NucMean_RATIO = maskedSumRatio3D(Fnum, CFP, nucMaskBin);
+        tm.CytMean_RATIO = maskedSumRatio3D(Fnum, CFP, cytMaskBin);
+        tm.WholeMean_RATIO = maskedSumRatio3D(Fnum, CFP, wholeMaskBin);
+    end
+    
     % --- DNA related information (previously in getDNAData)
     if exist('dnaMask','var') && ~isempty(dnaMask)
         nucHoechstInt = double(data.DAPI) .* nucMask_original;
@@ -233,4 +259,45 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         end
     end
 
+end
+
+function y = maskedMean3D(I, mask)
+% maskedMean3D
+% Calculates frame-wise mean intensity inside a binary mask.
+%
+% I    : H x W x T image stack
+% mask : H x W x T logical mask
+%
+% y(t) = sum(I(:,:,t) within mask(:,:,t)) / number of mask pixels
+
+    mask = mask > 0;
+
+    num = squeeze(sum(sum(double(I) .* double(mask), 1), 2));
+    den = squeeze(sum(sum(mask, 1), 2));
+
+    den(den == 0) = NaN;
+    y = num ./ den;
+end
+
+function r = maskedSumRatio3D(numeratorStack, denominatorStack, mask)
+% maskedSumRatio3D
+% Calculates frame-wise ratio as:
+%
+%   sum(numeratorStack within mask) / sum(denominatorStack within mask)
+%
+% This is recommended for FRET/CFP ratio quantification because it avoids
+% averaging pixel-wise ratios.
+
+    mask = mask > 0;
+
+    if ~isequal(size(numeratorStack), size(denominatorStack)) || ...
+       ~isequal(size(numeratorStack), size(mask))
+        error('Size mismatch: numerator, denominator, and mask must have the same H×W×T size.');
+    end
+
+    num = squeeze(sum(sum(double(numeratorStack)   .* double(mask), 1), 2));
+    den = squeeze(sum(sum(double(denominatorStack) .* double(mask), 1), 2));
+
+    den(den == 0) = NaN;
+    r = num ./ den;
 end
