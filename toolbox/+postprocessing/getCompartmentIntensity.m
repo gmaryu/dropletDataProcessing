@@ -76,7 +76,7 @@ function [tm, spermCount, nucleiCount] = getCompartmentIntensity(db, dropletID, 
         tm.NPIXEL_NUC_MOD = NaN*ones(size(tm,1),1);
 
         spermCount = NaN;
-        nucleiCount = NaN;
+        nucleiCount = max(tm.NUCLEI_COUNT);
     end
     
     %% Prepare cropped images stack

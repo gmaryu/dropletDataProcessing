@@ -39,7 +39,7 @@ tm.VOLUMEUM3 = (4/3)*pi*(tm.ORIGINAL_MED_DIAMETER./2).^3; %.convertAreaPixelsToV
 
 %
 % --- correct old "NPIXEL_NUC_MOD" and "SUM_NUCLEUS_HORCHST_INT_MOD"
-if ismember('NPIXEL_NUC_MOD', string(tm.Properties.VariableNames))
+if ismember('NPIXEL_NUC_MOD', string(tm.Properties.VariableNames)) && all(~isnan(tm.NPIXEL_NUC_MOD))
     % if any(tm.NPIXEL_NUC_MOD ~= max(tm.NPIXEL_NUC, tm.NPIXEL_DNA))
     %     tm.NPIXEL_NUC_MOD = max(tm.NPIXEL_NUC, tm.NPIXEL_DNA);
     %     disp('NPIXEL_NUC_MOD is fixed')
@@ -48,6 +48,10 @@ if ismember('NPIXEL_NUC_MOD', string(tm.Properties.VariableNames))
     tm.NUC_VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tm.NPIXEL_NUC_MOD, dataSet.PixelToUm); % um^3
     tm.NCVR = tm.NUC_VOLUMEUM3 ./ tm.VOLUMEUM3;
     tm.NUC_SURF_AREA = 4.*tm.NPIXEL_NUC_MOD.*dataSet.PixelToUm^2;
+elseif ismember('NPIXEL_NUC', string(tm.Properties.VariableNames))
+    tm.NUC_VOLUMEUM3 = visualization.convertAreaPixelsToVolume(tm.NPIXEL_NUC, dataSet.PixelToUm); % um^3
+    tm.NCVR = tm.NUC_VOLUMEUM3 ./ tm.VOLUMEUM3;
+    tm.NUC_SURF_AREA = 4.*tm.NPIXEL_NUC.*dataSet.PixelToUm^2;
 end
 
 if ismember('SUM_NUCLEUS_HORCHST_INT_MOD', string(tm.Properties.VariableNames))
