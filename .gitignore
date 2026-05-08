@@ -34,3 +34,5 @@ codegen/
 
 # Debug scripts
 debug/
+
+.DS_Store
