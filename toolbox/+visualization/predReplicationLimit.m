@@ -18,7 +18,7 @@ for i = 1:size(info,1)
         tmpCycles = cycle(cycle.POS_ID == tmpP & cycle.TRACK_ID == tmpD, :);
         DNACR1 = tmpCycles.DNACR_DNA(1);
 
-        D = 1000;
+        D = 1300;
         N = 12;
         m = info.SPERM_COUNT(i);
         k = log2(1+(2/m)*d_rate*(tmpDia/D).^3*((2.^N)-1));
