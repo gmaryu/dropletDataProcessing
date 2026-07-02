@@ -62,6 +62,8 @@ nucCycleInfo = applyOptionalStateSmoothing(nucCycleInfo, P);
 transitionTable = buildTransitionTable(nucCycleInfo);
 existingCycleTable_withStates = addResultsBackToOriginalCycleTable(existingCycleTable, nucCycleInfo);
 
+
+
 makeDiagnosticPlots(nucCycleInfo, cytoRef, shapeCycles, phase, nPhasePoints, thresholds, P);
 saveClassificationOutputs( ...
     nucCycleInfo, existingCycleTable_withStates, transitionTable, cycles, normCycles, shapeCycles, ...
@@ -143,8 +145,8 @@ function P = initParameters()
     P.consecutiveN = 2;
 
     %% Output
-    P.outputMatFile = "nuclear_reconstituted_classification_peak2peak_refactored.mat";
-    P.outputCsvFile = "existing_cycle_table_with_states_peak2peak_refactored.csv";
+    P.outputMatFile = fullfile(resultDataSavePath, "nuclear_reconstituted_classification_peak2peak_refactored.mat");
+    P.outputCsvFile = fullfile(resultDataSavePath, "existing_cycle_table_with_states_peak2peak_refactored.csv");
 end
 
 %%
@@ -214,6 +216,11 @@ function [existingCycleTable, cycleBoundaryTable, traceInfo] = prepareCycleBound
     existingCycleTable = dataSet.cycle;
     existingCycleTable.OriginalCycleRow = (1:height(existingCycleTable))';
     existingCycleTable.DropletID = makeDropletID(existingCycleTable.POS_ID, existingCycleTable.TRACK_ID);
+    existingCycleTable.Diameter = NaN*ones(size(existingCycleTable,1),1);
+    for i = 1:size(existingCycleTable,1)
+        existingCycleTable.Diameter(i) = dataSet.info.ORIGINAL_MED_DIAMETER(dataSet.info.POS_ID == existingCycleTable.POS_ID(i) & dataSet.info.TRACK_ID == existingCycleTable.TRACK_ID(i));
+    end
+    %
 
     if ~ismember("DropletID", traceInfo.Properties.VariableNames)
         if all(ismember(["PositionNumber", "DropletNumber"], string(traceInfo.Properties.VariableNames)))
@@ -1181,7 +1188,7 @@ function plotState3Context(T, thresholds, P)
     title("State 3 context: high N/C OR within-droplet long cycle");
     cb = colorbar; ylabel(cb, "Raw state"); grid on;
 
-    figure("Name", "Within-droplet cycle-length context");
+    figure("Name", "Within-droplet cycle-length context",'Visible','off');
     scatter(T.CycleLengthDeltaPrev, T.CycleLengthZWithinDroplet, 35, T.State_raw, "filled");
     hold on;
     xline(P.withinDropletDeltaThreshold, "k--", "LineWidth", 1.5);
