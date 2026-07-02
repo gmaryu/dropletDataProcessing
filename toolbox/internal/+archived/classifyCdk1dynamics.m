@@ -1,4 +1,11 @@
 function classifyCdk1dynamics(nucData, dataSet, traceInfo, resultDataPath, resultDataSavePath)
+%% DEPRECATED / ARCHIVED -- do not call.
+% Superseded by postprocessing.extractShapeFeatures + postprocessing.runPhaseClassification.
+% This classifier is circular (Phase 3 is gated on N/C volume ratio and cycle
+% length, the quantities the paper later claims depend on phase). Kept here
+% for provenance only: it is also the origin of the shared preprocessing/
+% segmentation/feature-extraction local functions, which now live canonically
+% in toolbox/+postprocessing/private/.
 %% Nuclear-reconstituted droplet Cdk1 cycle classification
 %
 % Classification goal:
